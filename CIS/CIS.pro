@@ -11,8 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = CIS
 TEMPLATE = app
 
-windows {
-INCLUDEPATH += /usr/local/include
+win32:{
+INCLUDEPATH += /usr/local/include \
             .
 LIBS += -L/usr/local/lib/ \
     -lopencv_shape \
@@ -35,8 +35,8 @@ LIBS += -L/usr/local/lib/ \
 }
 
 unix:!macx: {
-INCLUDEPATH += /usr/include
-            .
+INCLUDEPATH += /usr/include \
+            /usr/include/eigen3
 LIBS += -L/usr/lib/ \
     #-lopencv_shape \
     -lopencv_stitching \

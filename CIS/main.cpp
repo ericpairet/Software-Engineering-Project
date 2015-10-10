@@ -6,7 +6,6 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
-#include <tgmath.h>
 #include <QtMath>
 
 //
