@@ -6,6 +6,10 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 #include <opencv2/opencv.hpp>
+<<<<<<< HEAD
+=======
+#include <QtMath>
+>>>>>>> 353b1bf6c5341e2cb21fd6418f4b03eb9ecb1552
 
 //
 using namespace std;
