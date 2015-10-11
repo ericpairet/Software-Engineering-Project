@@ -11,21 +11,9 @@
 #include <QPainter>
 #include <QDebug>
 #include <QTimer>
-
-class CMonitorWidget : public QWidget
-{
-    Q_OBJECT
-public:
-    explicit CMonitorWidget( QWidget *parent = 0);
-    ~CMonitorWidget();
-private:
-    QPixmap *image;
-    QTimer* mainTimer;
-public slots:
-    void updateImage( QPixmap);
-private slots:
-    void paintEvent(QPaintEvent *);
-};
+#include <QRadioButton>
+//#include <QGraphicsSceneMouseEvent>
+#include <QMouseEvent>
 
 class CToolsWidget : public QWidget
 {
@@ -33,13 +21,36 @@ class CToolsWidget : public QWidget
 public:
     CToolsWidget(QWidget *parent = 0);
     ~CToolsWidget();
-    QPushButton *loadButton;
+    QRadioButton *fgRadioButton, *bgRadioButton;
 private:
+    QPushButton *loadButton;
     QLabel *loadLabel;
+    QLabel *seedLabel;
 private slots:
     void loadSlot();
 signals:
     void imageLoaded( QPixmap);
+};
+
+class CMonitorWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit CMonitorWidget( CToolsWidget *_tools, QWidget *parent = 0);
+    ~CMonitorWidget();
+private:
+    CToolsWidget *tools;
+    QPixmap *image;
+    QTimer* mainTimer;
+    QList< QPair< int, int> > fgSeeds, bgSeeds;
+    bool dragging;
+public slots:
+    void updateImage( QPixmap);
+private slots:
+    void paintEvent(QPaintEvent *);
+    void mouseMoveEvent(QMouseEvent *event);
+//    void mousePressEvent(QMouseEvent);
+//    void mouseReleaseEvent(QMouseEvent);
 };
 
 #endif // WIDGETS_H

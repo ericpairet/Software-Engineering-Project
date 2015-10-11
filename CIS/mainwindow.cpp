@@ -9,7 +9,7 @@ mainWindow::mainWindow(QWidget *parent) : QMainWindow(parent)
     toolsWidget->setWindowTitle(tr("Tools"));
     workspace->addSubWindow(toolsWidget);
 
-    monitorWidget = new CMonitorWidget( this);
+    monitorWidget = new CMonitorWidget( toolsWidget, this);
     monitorWidget->setWindowTitle(tr("Monitor"));
     workspace->addSubWindow(monitorWidget, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
 //    monitorWidget->setWindowState(Qt::WindowMaximized );
