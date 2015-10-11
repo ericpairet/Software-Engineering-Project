@@ -3,27 +3,19 @@
 
 #include <math.h>
 
-class Maths
+class CMaths
 {
 
 public:
-    Maths(){}
-    ~Maths(){}
+    CMaths(){}
+    ~CMaths(){}
 
+    // Function that returns the minimum number of three
+    static inline double minimumOfThree( const double &a, const double &b, const double &c){return a<b?a<c?a:c:b<c?b:c;}
+    static inline int minimumOfThree( const int &a, const int &b, const int &c){return a<b?a<c?a:c:b<c?b:c;}
     // Function that returns the maximum number of three
-    int maximumOfThree( const int &x , const int &y , const int &z ) {
-        int max = x;
-
-        if ( y > max ) {
-            max = y;
-        }
-
-        if ( z > max ) {
-            max = z;
-        }
-
-        return max;
-    }
+    static inline double maximumOfThree( const double &a, const double &b, const double &c){return a>b?a>c?a:c:b>c?b:c;}
+    static inline int maximumOfThree( const int &a, const int &b, const int &c){return a>b?a>c?a:c:b>c?b:c;}
 };
 
 #endif

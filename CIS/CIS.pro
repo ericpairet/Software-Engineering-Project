@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui
+QT += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -81,7 +81,11 @@ LIBS += -L/usr/local/lib/ \
     -lopencv_hal
 }
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    mainwindow.cpp \
+    widgets.cpp
 
 HEADERS += \
-    mathtools.h
+    mathtools.h \
+    mainwindow.h \
+    widgets.h

@@ -1,3 +1,4 @@
+#if 0
 // Headers
 #include "mathtools.h"
 
@@ -16,8 +17,6 @@ using namespace cv;
 // Main function
 int main( int argc, char** argv )
 {
-    Maths math;
-
     // Load image to be computed (mxn)
     Mat I = imread( "/Users/ericpairet/Desktop/equations/i_test_red.jpg" );
 
@@ -81,7 +80,7 @@ int main( int argc, char** argv )
                     if ( !( ( a == i ) and ( b == j ) ) and ( a >= 0 ) and ( a < m ) and ( b >= 0 ) and ( b < n ) and ( W( i * n + j , a * n + b ) == 0 ) ) {
 
                         // Compute wij ( Pi is defined by i and j, Pj is defined by a and b )
-                        float wij = exp( - betta * pow( double( math.maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
+                        float wij = exp( - betta * pow( double( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
                                                                                 abs( chG( i , j ) - chG( a , b ) ),
                                                                                 abs( chB( i , j ) - chB( a , b ) ) ) ) , 2 ) / 0.1 ) + 10e-6;
 
@@ -170,4 +169,16 @@ int main( int argc, char** argv )
     waitKey();
 
     return 0;
+}
+#endif
+
+#include "mainwindow.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    mainWindow w;
+    w.show();
+    return a.exec();
 }
