@@ -15,6 +15,7 @@ mainWindow::mainWindow(QWidget *parent) : QMainWindow(parent)
 //    monitorWidget->setWindowState(Qt::WindowMaximized );
 
     connect( toolsWidget, SIGNAL(imageLoaded(QPixmap)), monitorWidget, SLOT(updateImage(QPixmap)));
+    connect( toolsWidget->execButton, SIGNAL(pressed()), monitorWidget, SLOT(segmentaion()));
 }
 
 mainWindow::~mainWindow()

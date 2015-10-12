@@ -14,6 +14,10 @@
 #include <QRadioButton>
 //#include <QGraphicsSceneMouseEvent>
 #include <QMouseEvent>
+#include <QLineEdit>
+#include <QImage>
+
+#include "mathtools.h"
 
 class CToolsWidget : public QWidget
 {
@@ -22,6 +26,9 @@ public:
     CToolsWidget(QWidget *parent = 0);
     ~CToolsWidget();
     QRadioButton *fgRadioButton, *bgRadioButton;
+    QLineEdit *penSize;
+    QPushButton *execButton;
+    QString imagePath;
 private:
     QPushButton *loadButton;
     QLabel *loadLabel;
@@ -46,6 +53,7 @@ private:
     bool dragging;
 public slots:
     void updateImage( QPixmap);
+    void segmentaion();
 private slots:
     void paintEvent(QPaintEvent *);
     void mouseMoveEvent(QMouseEvent *event);

@@ -9,9 +9,9 @@
 #include <opencv2/opencv.hpp>
 
 //
-using namespace std;
-using namespace Eigen;
-using namespace cv;
+    using namespace std;
+    using namespace Eigen;
+    using namespace cv;
 
 
 // Main function
