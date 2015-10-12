@@ -192,7 +192,20 @@ void CMonitorWidget::segmentaion()
     b = VectorXf::Zero( m*n);
     qDebug() << "Is and b created";
 
-    //
+    //just for test with testImage.jpg (7x9 Pixels image)
+    fgSeeds.clear();
+    fgSeeds.append(QPair<int, int> (2, 3));
+    fgSeeds.append(QPair<int, int> (2, 4));
+    fgSeeds.append(QPair<int, int> (3, 3));
+
+    bgSeeds.clear();
+    bgSeeds.append(QPair<int, int> (1, 6));
+    bgSeeds.append(QPair<int, int> (1, 7));
+    bgSeeds.append(QPair<int, int> (2, 7));
+    bgSeeds.append(QPair<int, int> (3, 7));
+    bgSeeds.append(QPair<int, int> (4, 7));
+    bgSeeds.append(QPair<int, int> (5, 7));
+
     for(int i = 0; i < fgSeeds.count(); i++)
     {
         //qDebug() << fgSeeds.at(i).first << fgSeeds.at(i).second << image->width() << image->height();
