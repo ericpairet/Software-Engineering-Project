@@ -195,14 +195,14 @@ void CMonitorWidget::segmentaion()
         qDebug() << fgSeeds.at(i).first << fgSeeds.at(i).second << image->width() << image->height();
         Is( fgSeeds.at(i).first, fgSeeds.at(i).first) = 1;
         Is( fgSeeds.at(i).second, fgSeeds.at(i).second) = 1;
-        b( fgSeeds.at(i).first * image->height()+ fgSeeds.at(i).second ) = xf;
+        b( fgSeeds.at(i).first + fgSeeds.at(i).second * image->width()) = xf;
     }
     for(int i = 0; i < bgSeeds.count(); i++)
     {
         qDebug() << bgSeeds.at(i).first << bgSeeds.at(i).second;
         Is( bgSeeds.at(i).first, bgSeeds.at(i).first) = 1;
         Is( bgSeeds.at(i).second, bgSeeds.at(i).second) = 1;
-        b( bgSeeds.at(i).first * image->height()+ bgSeeds.at(i).second ) = xb;
+        b( bgSeeds.at(i).first + bgSeeds.at(i).second * image->width()) = xb;
     }
     qDebug() << "I matrix";
 
