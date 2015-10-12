@@ -82,15 +82,14 @@ using namespace cv;
 void CMonitorWidget::segmentaion()
 {
     // Load image to be computed (mxn)
-//    Mat I = QPixmapToCvMat( *image);
+    // Mat I = QPixmapToCvMat( *image);
     Mat I = imread( tools->imagePath.toStdString().c_str());
+    qDebug() << "Image Loaded";
+
     // Take m and n image size
     int m = I.rows;
     int n = I.cols;
-//    imshow( "IMG" , I );
-//    waitKey();
 
-    qDebug() << "Image Loaded";
     // Check if there is an image
     if ( ( m * n ) == 0 ) {
         cout << "No image" << endl;
@@ -108,7 +107,7 @@ void CMonitorWidget::segmentaion()
     }
 
     // Initialize tunning constants
-    float betta = 1.0;
+    float betta = 10.0;
 
     // Get the R, G, B channels in BGR order
     vector<Mat> channels(3);
@@ -116,8 +115,8 @@ void CMonitorWidget::segmentaion()
     Mat_<int> chR = channels[2];
     Mat_<int> chG = channels[1];
     Mat_<int> chB = channels[0];
-
     qDebug() << "Chanels created";
+
     //**************************
     //
     // Compute matrix W and D
@@ -177,6 +176,7 @@ void CMonitorWidget::segmentaion()
     MatrixXf L( m * n , m * n );
     L = D - W;
     qDebug() << "L Matrix";
+
     //**************************
     //
     // Solve linear system
@@ -186,30 +186,36 @@ void CMonitorWidget::segmentaion()
 
     //
     MatrixXf Is( m * n , m * n );
-    Is = MatrixXf::Zero( m * n , m * n );       // just for test (change with the GUI)
+    Is = MatrixXf::Zero( m * n , m * n );
+
     VectorXf b( m * n );
     b = VectorXf::Zero( m*n);
-    qDebug() << "I created";
+    qDebug() << "Is and b created";
+
+    //
     for(int i = 0; i < fgSeeds.count(); i++)
     {
-        qDebug() << fgSeeds.at(i).first << fgSeeds.at(i).second << image->width() << image->height();
-        Is( fgSeeds.at(i).first, fgSeeds.at(i).first) = 1;
-        Is( fgSeeds.at(i).second, fgSeeds.at(i).second) = 1;
+        //qDebug() << fgSeeds.at(i).first << fgSeeds.at(i).second << image->width() << image->height();
+        //Is( fgSeeds.at(i).first, fgSeeds.at(i).first) = 1;
+        //Is( fgSeeds.at(i).second, fgSeeds.at(i).second) = 1;
+        Is( fgSeeds.at(i).first + fgSeeds.at(i).second * image->width(),fgSeeds.at(i).first + fgSeeds.at(i).second * image->width()) = 1;
         b( fgSeeds.at(i).first + fgSeeds.at(i).second * image->width()) = xf;
     }
+
     for(int i = 0; i < bgSeeds.count(); i++)
     {
-        qDebug() << bgSeeds.at(i).first << bgSeeds.at(i).second;
-        Is( bgSeeds.at(i).first, bgSeeds.at(i).first) = 1;
-        Is( bgSeeds.at(i).second, bgSeeds.at(i).second) = 1;
+        //qDebug() << bgSeeds.at(i).first << bgSeeds.at(i).second;
+        //Is( bgSeeds.at(i).first, bgSeeds.at(i).first) = 1;
+        //Is( bgSeeds.at(i).second, bgSeeds.at(i).second) = 1;
+        Is( bgSeeds.at(i).first + bgSeeds.at(i).second * image->width(),bgSeeds.at(i).first + bgSeeds.at(i).second * image->width()) = 1;
         b( bgSeeds.at(i).first + bgSeeds.at(i).second * image->width()) = xb;
     }
-    qDebug() << "I matrix";
+    qDebug() << "Is matrix";
 
     MatrixXf Is_L( m * n , m * n );
     Is_L = Is + L * L;
-
     qDebug() << "Is_L Matrix";
+
     VectorXf X( m * n );
     X = Is_L.inverse() * b;
     qDebug() << "Inversed";
@@ -227,6 +233,7 @@ void CMonitorWidget::segmentaion()
     // Variable to store the segmented image
     cv::Mat_<float> Y = Mat_<float>::zeros( m , n );        // float?
     qDebug() << "Y created";
+
     // Variable used to reshape from vector to matrix
     int r = 0;
 
