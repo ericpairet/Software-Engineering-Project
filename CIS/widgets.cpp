@@ -1,6 +1,6 @@
 #include "widgets.h"
 
-//temp includes :
+// Temporal includes
 #include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/LU>
@@ -79,12 +79,18 @@ using namespace std;
 using namespace Eigen;
 using namespace cv;
 
+Mat img2grey(Mat img) {
+    Mat dst;
+    normalize(img, dst, 0.0, 1.0, NORM_MINMAX, CV_32FC3);
+    return dst;
+}
+
 void CMonitorWidget::segmentaion()
 {
     // Load image to be computed (mxn)
     // Mat I = QPixmapToCvMat( *image);
-    Mat I = imread( tools->imagePath.toStdString().c_str());
-    qDebug() << "Image Loaded";
+    Mat I = imread( tools->imagePath.toStdString().c_str() , CV_32FC3 );
+    //I = img2grey(I);
 
     // Take m and n image size
     int m = I.rows;
@@ -97,8 +103,8 @@ void CMonitorWidget::segmentaion()
     }
 
     // Initialize background and foreground labels (do not change the type!)
-    float xb = 2;
-    float xf = 1;
+    float xb = 1;
+    float xf = 0;
 
     // Check xb > xf
     if ( xb < xf ) {
@@ -107,15 +113,14 @@ void CMonitorWidget::segmentaion()
     }
 
     // Initialize tunning constants
-    float betta = 10.0;
+    float betta = 0.005;
 
     // Get the R, G, B channels in BGR order
     vector<Mat> channels(3);
     split(I,channels);
-    Mat_<int> chR = channels[2];
-    Mat_<int> chG = channels[1];
-    Mat_<int> chB = channels[0];
-    qDebug() << "Chanels created";
+    Mat_<double> chR = channels[2];
+    Mat_<double> chG = channels[1];
+    Mat_<double> chB = channels[0];
 
     //**************************
     //
@@ -126,15 +131,13 @@ void CMonitorWidget::segmentaion()
     // Initialize adjency matrix W with zeros
     MatrixXf W( m * n , m * n );
     W = MatrixXf::Zero( m * n , m * n );
-    qDebug() << "WMatrix done";
 
     // Initialize diagonal matrix D with zeros
     MatrixXf D( m * n , m * n );
     D = MatrixXf::Zero( m * n , m * n );
-    qDebug() << "D Matrix done";
 
-    // For each row
-    for ( int i = 0 ; i < m ; i++ ) {
+    // For each row                                                                           // --> TODO: Optimize the code changing the way to compute D
+    for ( int i = 0 ; i < m ; i++ ) {                                                         //           (avoid compute twice the same W -> uncomment condition in below if)
         // For each column
         for ( int j = 0 ; j < n ; j ++ ) {
 
@@ -146,12 +149,13 @@ void CMonitorWidget::segmentaion()
                 // For each column of the neighborhood
                 for ( int b = j - 1 ; b <= j + 1 ; b++ ) {
                     // Avoid compute edge with itself, values out the matrix and recompute edges
-                    if ( !( ( a == i ) and ( b == j ) ) and ( a >= 0 ) and ( a < m ) and ( b >= 0 ) and ( b < n ) and ( W( i * n + j , a * n + b ) == 0 ) ) {
+                    if ( !( ( a == i ) and ( b == j ) ) and ( a >= 0 ) and ( a < m ) and ( b >= 0 ) and ( b < n ) ) { //and ( W( i * n + j , a * n + b ) == 0 ) ) {
 
                         // Compute wij ( Pi is defined by i and j, Pj is defined by a and b )
-                        float wij = exp( - betta * pow( double( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
-                                                                                        abs( chG( i , j ) - chG( a , b ) ),
-                                                                                        abs( chB( i , j ) - chB( a , b ) ) ) ) , 2 ) / 0.1 ) + 10e-6;
+                        float wij = exp( - betta * pow( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
+                                                                                abs( chG( i , j ) - chG( a , b ) ),
+                                                                                abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / 0.1 ) + 10e-6;
+
 
                         // Store the result at W in wij and wji
                         W( i * n + j , a * n + b ) = wij;
@@ -167,36 +171,31 @@ void CMonitorWidget::segmentaion()
         }
     }
 
-    //**************************
-    //
-    // Compute matrix L
-    //
-    //**************************
-
+    // Compute L matrix                                                                       // --> TODO: Try to do in the same loop as D and W?
     MatrixXf L( m * n , m * n );
     L = D - W;
-    qDebug() << "L Matrix";
 
     //**************************
     //
     // Solve linear system
-    //   (Is + L^2)x = b
+    //       Ax = b
     //
     //**************************
 
-    //
+    // Create Is matrix and initialize with zeros
     MatrixXf Is( m * n , m * n );
     Is = MatrixXf::Zero( m * n , m * n );
 
+    // Create b vector and initialize with zeros
     VectorXf b( m * n );
     b = VectorXf::Zero( m*n);
-    qDebug() << "Is and b created";
 
-    //just for test with testImage.jpg (7x9 Pixels image)
+    /*
+    // Just for test with testImage.jpg (7x9 Pixels image)
     fgSeeds.clear();
-    fgSeeds.append(QPair<int, int> (2, 3));
-    fgSeeds.append(QPair<int, int> (2, 4));
     fgSeeds.append(QPair<int, int> (3, 3));
+    fgSeeds.append(QPair<int, int> (3, 4));
+    fgSeeds.append(QPair<int, int> (4, 3));
 
     bgSeeds.clear();
     bgSeeds.append(QPair<int, int> (1, 6));
@@ -205,33 +204,32 @@ void CMonitorWidget::segmentaion()
     bgSeeds.append(QPair<int, int> (3, 7));
     bgSeeds.append(QPair<int, int> (4, 7));
     bgSeeds.append(QPair<int, int> (5, 7));
+    */
 
-    for(int i = 0; i < fgSeeds.count(); i++)
+    // Compute Is matrix and b vector                                                         // --> TODO: Apply OR gate? It can avoid go through all the seeds
+    for( int i = 0 ; i < fgSeeds.count() ; i++ )
     {
-        //qDebug() << fgSeeds.at(i).first << fgSeeds.at(i).second << image->width() << image->height();
-        //Is( fgSeeds.at(i).first, fgSeeds.at(i).first) = 1;
-        //Is( fgSeeds.at(i).second, fgSeeds.at(i).second) = 1;
-        Is( fgSeeds.at(i).first + fgSeeds.at(i).second * image->width(),fgSeeds.at(i).first + fgSeeds.at(i).second * image->width()) = 1;
-        b( fgSeeds.at(i).first + fgSeeds.at(i).second * image->width()) = xf;
+        Is( fgSeeds.at( i ).first + fgSeeds.at( i ).second * image->width() , fgSeeds.at( i ).first + fgSeeds.at( i ).second * image->width() ) = 1;
+        b( fgSeeds.at( i ).first + fgSeeds.at( i ).second * image->width() ) = xf;
     }
 
-    for(int i = 0; i < bgSeeds.count(); i++)
+    for( int i = 0 ; i < bgSeeds.count() ; i++ )
     {
-        //qDebug() << bgSeeds.at(i).first << bgSeeds.at(i).second;
-        //Is( bgSeeds.at(i).first, bgSeeds.at(i).first) = 1;
-        //Is( bgSeeds.at(i).second, bgSeeds.at(i).second) = 1;
-        Is( bgSeeds.at(i).first + bgSeeds.at(i).second * image->width(),bgSeeds.at(i).first + bgSeeds.at(i).second * image->width()) = 1;
-        b( bgSeeds.at(i).first + bgSeeds.at(i).second * image->width()) = xb;
+        Is( bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() , bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() ) = 1;
+        b( bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() ) = xb;
     }
-    qDebug() << "Is matrix";
 
+    // Compue Is_L
+    qDebug() << "Starting L^2";
     MatrixXf Is_L( m * n , m * n );
-    Is_L = Is + L * L;
-    qDebug() << "Is_L Matrix";
+    Is_L = Is + L * L;                                                                        // --> TODO: Implement Coppersmith algorithm to solve L^2?
+    qDebug() << "L^2 done";
 
+    // Compute X
+    qDebug() << "Starting invers";
     VectorXf X( m * n );
-    X = Is_L.inverse() * b;
-    qDebug() << "Inversed";
+    X = Is_L.inverse() * b;                                                                   // --> TODO: Implement Cholesky factorization algorithm (suggested in the paper)?
+    qDebug() << "Invers done";
 
     //**************************
     //
@@ -245,7 +243,6 @@ void CMonitorWidget::segmentaion()
 
     // Variable to store the segmented image
     cv::Mat_<float> Y = Mat_<float>::zeros( m , n );        // float?
-    qDebug() << "Y created";
 
     // Variable used to reshape from vector to matrix
     int r = 0;
@@ -260,8 +257,10 @@ void CMonitorWidget::segmentaion()
         if ( X( i ) >= threshold ) {
             Y( r , i - r * n ) = xb;
         }
+        else {                          // Depends on the value of xf this can be avoided
+            Y( r , i - r * n ) = xf;
+        }
     }
-
 
     //**************************
     //
