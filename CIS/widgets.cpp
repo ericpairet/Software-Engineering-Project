@@ -8,12 +8,17 @@
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
 
+#include <Eigen/SparseCholesky>         // just for test
+#include <Eigen/SparseCore>
+
 #include <opencv2/opencv.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
 
 // only for debugging purpouses
 #include <ctime>
+
+typedef Eigen::SparseMatrix<float> SpMat; // declares a column-major sparse matrix type of double      // just for test
 
 
 //Monitor Widget for showing the image
@@ -94,6 +99,9 @@ Mat img2grey(Mat img) {
 
 void CMonitorWidget::segmentaion()
 {
+    // Variables only for performance purposes
+    time_t tstart, tend;
+
     // Load image to be computed (mxn)
     // Mat I = QPixmapToCvMat( *image);
     Mat I = imread( tools->imagePath.toStdString().c_str() , CV_32FC3 );
@@ -226,17 +234,31 @@ void CMonitorWidget::segmentaion()
         b( bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() ) = xb;
     }
 
+
+
+
     // Compue Is_L
     qDebug() << "Starting L^2";
     MatrixXf Is_L( m * n , m * n );
-    Is_L = Is + L * L;                                                                        // --> TODO: Implement Coppersmith algorithm to solve L^2?
-    qDebug() << "L^2 done";
 
+    tstart = time(0);
+    Eigen::SparseMatrix<float> L_sparse( m * n , m * n );
+    L_sparse = L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
+    Eigen::SparseMatrix<float> L2_sparse_test( m * n , m * n);
+    L2_sparse_test = L_sparse * L_sparse;
+    Is_L = Is + MatrixXf(L2_sparse_test);
+    tend = time(0);
+    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
+
+    /*tstart = time(0);
+    Is_L = Is + L * L;
+    tend = time(0);
+    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
+    */
     // Compute X
     VectorXf X( m * n );
 
 // ----------------------------------------------------------------------------------------------------------------
-    time_t tstart, tend;
 /*
     tstart = time(0);
     // OPTION 1
@@ -264,6 +286,22 @@ void CMonitorWidget::segmentaion()
     X = Is_L.ldlt().solve(b);
     tend = time(0);
     cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
+
+
+/*
+    tstart = time(0);
+    // OPTION 4     -->     Sparse matrix
+    SparseMatrix<float> A( m * n , m * n );
+    A = Is_L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
+
+    // Solving:
+    SimplicialCholesky<SpMat> chol(A);  // performs a Cholesky factorization of A
+    X = chol.solve(b);         // use the factorization to solve for the given right hand side
+
+
+    tend = time(0);
+    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;*/
+
 // ----------------------------------------------------------------------------------------------------------------
 
     //**************************
