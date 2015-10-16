@@ -4,9 +4,16 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/LU>
+
+#include <Eigen/Cholesky>
+#include <Eigen/Core>
+
 #include <opencv2/opencv.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
+
+// only for debugging purpouses
+#include <ctime>
 
 
 //Monitor Widget for showing the image
@@ -226,10 +233,38 @@ void CMonitorWidget::segmentaion()
     qDebug() << "L^2 done";
 
     // Compute X
-    qDebug() << "Starting invers";
     VectorXf X( m * n );
-    X = Is_L.inverse() * b;                                                                   // --> TODO: Implement Cholesky factorization algorithm (suggested in the paper)?
-    qDebug() << "Invers done";
+
+// ----------------------------------------------------------------------------------------------------------------
+    time_t tstart, tend;
+/*
+    tstart = time(0);
+    // OPTION 1
+    X = Is_L.inverse() * b;
+
+    tend = time(0);
+    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
+*/
+
+/*
+    tstart = time(0);
+    // OPTION 2
+    X = b;
+    LDLT<MatrixXf> ldlt;
+    ldlt.compute(Is_L);
+    ldlt.solveInPlace(X);
+
+    tend = time(0);
+    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
+*/
+
+
+    tstart = time(0);
+    // OPTION 3
+    X = Is_L.ldlt().solve(b);
+    tend = time(0);
+    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
+// ----------------------------------------------------------------------------------------------------------------
 
     //**************************
     //
@@ -274,7 +309,6 @@ void CMonitorWidget::segmentaion()
     waitKey();
 }
 
-//-------------------------------------------------------------------------------
 
 //Tools Widget for handling the tools (this class is temperory, we can put everything we need here for know, then we can separate them
 CToolsWidget::CToolsWidget( QWidget *parent)
