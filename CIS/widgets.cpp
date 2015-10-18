@@ -72,29 +72,30 @@ void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
     if( tools->fgRadioButton->isChecked() && image->rect().contains( screenPosX, screenPosY))
     {
         fgSeeds.insert( QPair< int, int>( screenPosX, screenPosY));
-        for(int i = 1; i <= size; i++)
-            for( int j = 1; j <= size; j++)
-                if( image->rect().contains( screenPosX, screenPosY))
+        for(int i = -size+1 ; i < size; i++)
+            for( int j = -size+1 ; j < size; j++)
+                if( sqrt( i*i+j*j) < size && image->rect().contains( screenPosX+i, screenPosY+j))
                     fgSeeds.insert( QPair< int, int>( screenPosX+i, screenPosY+j));
     }
     else if( tools->bgRadioButton->isChecked() && image->rect().contains( screenPosX, screenPosY))
     {
         bgSeeds.insert( QPair< int, int>( screenPosX, screenPosY));
-        for(int i = 1; i <= size; i++)
-            for( int j = 1; j <= size; j++)
-                if( image->rect().contains( screenPosX, screenPosY))
+        for(int i = -size+1 ; i < size; i++)
+            for( int j = -size+1 ; j < size; j++)
+                if( sqrt( i*i+j*j) <= size && image->rect().contains( screenPosX+i, screenPosY+j))
                     bgSeeds.insert( QPair< int, int>( screenPosX+i, screenPosY+j));
     }
     else
     {
         fgSeeds.remove( QPair< int, int>( screenPosX, screenPosY));
         bgSeeds.remove( QPair< int, int>( screenPosX, screenPosY));
-        for(int i = 1; i <= size; i++)
-            for( int j = 1; j <= size; j++)
-            {
-                fgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
-                bgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
-            }
+        for(int i = -size+1 ; i < size; i++)
+            for( int j = -size+1 ; j < size; j++)
+                if(sqrt( i*i+j*j) <= size)
+                {
+                    fgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
+                    bgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
+                }
     }
 }
 
