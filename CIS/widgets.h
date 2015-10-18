@@ -25,9 +25,9 @@ class CToolsWidget : public QWidget
 public:
     CToolsWidget(QWidget *parent = 0);
     ~CToolsWidget();
-    QRadioButton *fgRadioButton, *bgRadioButton;
+    QRadioButton *fgRadioButton, *bgRadioButton, *rmvRadioButton;
     QLineEdit *penSize;
-    QPushButton *execButton;
+    QPushButton *execBtn, *clearSeedsBtn;
     QString imagePath;
 private:
     QPushButton *loadButton;
@@ -49,11 +49,12 @@ private:
     CToolsWidget *tools;
     QPixmap *image;
     QTimer* mainTimer;
-    QList< QPair< int, int> > fgSeeds, bgSeeds;
+    QSet< QPair< int, int> > fgSeeds, bgSeeds;
     bool dragging;
 public slots:
     void updateImage( QPixmap);
     void segmentaion();
+    void clearAllSeeds();
 private slots:
     void paintEvent(QPaintEvent *);
     void mouseMoveEvent(QMouseEvent *event);

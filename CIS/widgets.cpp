@@ -47,11 +47,11 @@ void CMonitorWidget::paintEvent(QPaintEvent */*event*/)
     painter.drawPixmap( 0, 0, *image);
     resize( image->width(), image->height());
     painter.setPen(Qt::red);
-    for(int i = 0; i < fgSeeds.count(); i++)
-        painter.drawPoint( fgSeeds.at(i).first, fgSeeds.at(i).second);
+    for( QSet< QPair< int, int> >::Iterator it = fgSeeds.begin(); it != fgSeeds.end(); ++it)
+        painter.drawPoint( it->first, it->second);
     painter.setPen(Qt::blue);
-    for(int i = 0; i < bgSeeds.count(); i++)
-        painter.drawPoint( bgSeeds.at(i).first, bgSeeds.at(i).second);
+    for( QSet< QPair< int, int> >::Iterator it = bgSeeds.begin(); it != bgSeeds.end(); ++it)
+        painter.drawPoint( it->first, it->second);
 }
 
 void CMonitorWidget::updateImage( QPixmap p)
@@ -69,22 +69,39 @@ void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
     int screenPosY = event->pos().y();
     qDebug() << screenPosX << screenPosY;
     int size = tools->penSize->text().toInt();
-    if( tools->fgRadioButton->isChecked())
+    if( tools->fgRadioButton->isChecked() && image->rect().contains( screenPosX, screenPosY))
     {
-        fgSeeds.append( QPair< int, int>( screenPosX, screenPosY));
+        fgSeeds.insert( QPair< int, int>( screenPosX, screenPosY));
         for(int i = 1; i <= size; i++)
             for( int j = 1; j <= size; j++)
-                if( screenPosX + i < image->width() && screenPosY + j < image->height())
-                    fgSeeds.append( QPair< int, int>( screenPosX+i, screenPosY+j));
+                if( image->rect().contains( screenPosX, screenPosY))
+                    fgSeeds.insert( QPair< int, int>( screenPosX+i, screenPosY+j));
+    }
+    else if( tools->bgRadioButton->isChecked() && image->rect().contains( screenPosX, screenPosY))
+    {
+        bgSeeds.insert( QPair< int, int>( screenPosX, screenPosY));
+        for(int i = 1; i <= size; i++)
+            for( int j = 1; j <= size; j++)
+                if( image->rect().contains( screenPosX, screenPosY))
+                    bgSeeds.insert( QPair< int, int>( screenPosX+i, screenPosY+j));
     }
     else
     {
-        bgSeeds.append( QPair< int, int>( screenPosX, screenPosY));
+        fgSeeds.remove( QPair< int, int>( screenPosX, screenPosY));
+        bgSeeds.remove( QPair< int, int>( screenPosX, screenPosY));
         for(int i = 1; i <= size; i++)
             for( int j = 1; j <= size; j++)
-                if( screenPosX + i < image->width() && screenPosY + j < image->height())
-                    bgSeeds.append( QPair< int, int>( screenPosX+i, screenPosY+j));
+            {
+                fgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
+                bgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
+            }
     }
+}
+
+void CMonitorWidget::clearAllSeeds()
+{
+    fgSeeds.clear();
+    bgSeeds.clear();
 }
 
 using namespace std;
@@ -222,16 +239,16 @@ void CMonitorWidget::segmentaion()
     */
 
     // Compute Is matrix and b vector                                                         // --> TODO: Apply OR gate? It can avoid go through all the seeds
-    for( int i = 0 ; i < fgSeeds.count() ; i++ )
+    for( QSet< QPair< int, int> >::Iterator it = fgSeeds.begin(); it != fgSeeds.end(); ++it)
     {
-        Is( fgSeeds.at( i ).first + fgSeeds.at( i ).second * image->width() , fgSeeds.at( i ).first + fgSeeds.at( i ).second * image->width() ) = 1;
-        b( fgSeeds.at( i ).first + fgSeeds.at( i ).second * image->width() ) = xf;
+        Is( it->first + it->second * image->width() , it->first + it->second * image->width() ) = 1;
+        b( it->first + it->second * image->width() ) = xf;
     }
 
-    for( int i = 0 ; i < bgSeeds.count() ; i++ )
+    for( QSet< QPair< int, int> >::Iterator it = bgSeeds.begin(); it != bgSeeds.end(); ++it)
     {
-        Is( bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() , bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() ) = 1;
-        b( bgSeeds.at( i ).first + bgSeeds.at( i ).second * image->width() ) = xb;
+        Is( it->first + it->second * image->width() , it->first + it->second * image->width() ) = 1;
+        b( it->first + it->second * image->width() ) = xb;
     }
 
 
@@ -360,15 +377,19 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     fgRadioButton = new QRadioButton("ForeGround");
     fgRadioButton->setChecked( true);
     bgRadioButton = new QRadioButton("BackGroung");
+    rmvRadioButton = new QRadioButton("Remove");
     penSize = new QLineEdit("1");
-    execButton = new QPushButton("Execute");
+    execBtn = new QPushButton("Execute");
+    clearSeedsBtn = new QPushButton("Clear");
     lOut->addWidget( loadLabel, 0, 0);
     lOut->addWidget( loadButton, 0, 1);
     lOut->addWidget( seedLabel, 1, 0);
     lOut->addWidget( fgRadioButton, 1, 1);
     lOut->addWidget( bgRadioButton, 2, 1);
+    lOut->addWidget( rmvRadioButton, 3, 1);
     lOut->addWidget( penSize, 2,0);
-    lOut->addWidget( execButton, 3,0);
+    lOut->addWidget( clearSeedsBtn, 3,0);
+    lOut->addWidget( execBtn, 4,0);
 
     connect( loadButton, SIGNAL(pressed()), this, SLOT(loadSlot()));
 }
