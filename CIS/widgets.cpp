@@ -27,7 +27,10 @@ CMonitorWidget::CMonitorWidget(CToolsWidget *_tools, QWidget *parent)
 {
     tools = _tools;
     this->setFixedSize(690,390);
-    image = new QPixmap( 690,390);
+    image = new QPixmap;
+    image2 = new QPixmap;
+    //image = new QPixmap(1,1);
+    //image2 = new QPixmap(1,1);
     mainTimer = new QTimer();
     mainTimer->setInterval(30);
     mainTimer->start();
@@ -45,6 +48,7 @@ void CMonitorWidget::paintEvent(QPaintEvent */*event*/)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.drawPixmap( 0, 0, *image);
+    painter.drawPixmap( image->width(), 0, *image2); //100,0,image2
     resize( image->width(), image->height());
     painter.setPen(Qt::red);
     for( QSet< QPair< int, int> >::Iterator it = fgSeeds.begin(); it != fgSeeds.end(); ++it)
@@ -59,8 +63,18 @@ void CMonitorWidget::updateImage( QPixmap p)
     QPixmap output( p.width(), p.height());
     output.fill(Qt::transparent);
     QPainter painter( &output);
-    painter.drawPixmap( 0, 0, p);
+    painter.drawPixmap(0, 0, p);
     image = new QPixmap(output);
+}
+
+void CMonitorWidget::updateImageR( QPixmap p)
+{
+    QPixmap output( p.width(), p.height());
+    output.fill(Qt::transparent);
+    QPainter painter( &output);
+    //painter.translate(100,0);
+    painter.drawPixmap(0, 0, p);
+    image2 = new QPixmap(output);
 }
 
 void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
@@ -114,7 +128,7 @@ Mat img2grey(Mat img) {
     return dst;
 }
 
-void CMonitorWidget::segmentaion()
+void CMonitorWidget::segmentation()
 {
     // Variables only for performance purposes
     time_t tstart, tend;
@@ -361,6 +375,31 @@ void CMonitorWidget::segmentaion()
     // Show the segmented image
     //namedWindow( "SI" , CV_WINDOW_NORMAL );
     imshow( "SI" , Y );
+    cout << "Y.cols" << Y.cols << endl;
+    cout << "Y.rows" << Y.rows << endl;
+    //QPixmap dest= QPixmap((uchar*) Y.data, Y.cols, Y.rows, Y.step, QPixmap::Format_RGB888);
+    QPixmap q = QPixmap::fromImage(QImage((unsigned char*) Y.data,
+                                      Y.cols,
+                                      Y.rows,
+                                      //QImage::Format_Grayscale8));
+                                      QImage::Format_RGB32));
+       //q = q.scaledToWidth(1);
+
+      // label->setPixmap( q );
+
+    //cout << "q.width" << q.width << endl;
+    //cout << "q.height" << q.height << endl;
+    emit imageLoaded1(q);
+
+/*
+    QLabel myLabel;
+        myLabel.setPixmap(QPixmap::fromImage(QImage((unsigned char*) Y.data,
+                                                    Y.cols,
+                                                    Y.rows,
+                                                    QImage::Format_RGB32)));
+
+        myLabel.show();
+*/
     waitKey();
 }
 
@@ -404,7 +443,8 @@ void CToolsWidget::loadSlot()
     QString path = QFileDialog::getOpenFileName(this, tr("Load image"), "./", tr("Image files (*.jpg *.jpeg *.png)"));
     if(path != "")
     {
-        QPixmap pic( path);
+        //QPixmap pic( path);
+        QPixmap pic = path;
         emit imageLoaded( pic);
     }
     imagePath = path;

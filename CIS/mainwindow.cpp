@@ -15,7 +15,8 @@ mainWindow::mainWindow(QWidget *parent) : QMainWindow(parent)
 //    monitorWidget->setWindowState(Qt::WindowMaximized );
 
     connect( toolsWidget, SIGNAL(imageLoaded(QPixmap)), monitorWidget, SLOT(updateImage(QPixmap)));
-    connect( toolsWidget->execBtn, SIGNAL(pressed()), monitorWidget, SLOT(segmentaion()));
+    connect( monitorWidget, SIGNAL(imageLoaded1(QPixmap)), monitorWidget, SLOT(updateImageR(QPixmap)));
+    connect( toolsWidget->execBtn, SIGNAL(pressed()), monitorWidget, SLOT(segmentation()));
     connect( toolsWidget->clearSeedsBtn, SIGNAL(pressed()), monitorWidget, SLOT(clearAllSeeds()));
 }
 
