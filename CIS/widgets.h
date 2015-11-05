@@ -45,17 +45,16 @@ class CMonitorWidget : public QWidget
 public:
     explicit CMonitorWidget( CToolsWidget *_tools, QWidget *parent = 0);
     ~CMonitorWidget();
+    QSet< QPair< int, int> > fgSeeds, bgSeeds;
+    QPixmap *image;
 private:
     CToolsWidget *tools;
-    QPixmap *image;
     QPixmap *image2;
     QTimer* mainTimer;
-    QSet< QPair< int, int> > fgSeeds, bgSeeds;
     bool dragging;
 public slots:
     void updateImage( QPixmap);
     void updateImageR( QPixmap);
-    void segmentation();
     void clearAllSeeds();
 private slots:
     void paintEvent(QPaintEvent *);
