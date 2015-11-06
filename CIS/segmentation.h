@@ -27,13 +27,17 @@ class CSegmentation : public QObject
 public:
     CSegmentation(CToolsWidget *_t, CMonitorWidget *_m);
     ~CSegmentation();
+
 public slots:
     void run();
+
 private:
     CToolsWidget *tools;
     CMonitorWidget *monitor;
+    Eigen::MatrixXf GraphLaplacianMatrix( cv::Mat& , float& , float& );
+
 signals:
-    void sendImage( QPixmap);
+    void sendImage( QPixmap );
 };
 
 #endif // CSEGMENTATION_H

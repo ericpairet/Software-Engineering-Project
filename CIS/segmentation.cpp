@@ -21,6 +21,72 @@ Mat img2grey(Mat img) {
     return dst;
 }
 
+MatrixXf CSegmentation::GraphLaplacianMatrix(Mat &I , float &betta , float &sigma ) {
+    // Take m and n image size
+    int m = I.rows;
+    int n = I.cols;
+
+    // Get the R, G, B channels in BGR order
+    vector<Mat> channels(3);
+    split(I,channels);
+    Mat_<double> chR = channels[2];
+    Mat_<double> chG = channels[1];
+    Mat_<double> chB = channels[0];
+
+    // Initialize adjency matrix W with zeros
+    MatrixXf W( m * n , m * n );
+    W = MatrixXf::Zero( m * n , m * n );
+
+    // Initialize diagonal matrix D with zeros
+    MatrixXf D( m * n , m * n );
+    D = MatrixXf::Zero( m * n , m * n );
+
+    // For each row                                                                           // --> TODO: Optimize the code changing the way to compute D
+    for ( int i = 0 ; i < m ; i++ ) {                                                         //           (avoid compute twice the same W -> uncomment condition in below if)
+        // For each column
+        for ( int j = 0 ; j < n ; j ++ ) {
+
+            // Variable to store the sum of dii
+            float tmp = 0;
+
+            // For each row of the neighborhood
+            for ( int a = i - 1 ; a <= i + 1 ; a++ ) {
+                // For each column of the neighborhood
+                for ( int b = j - 1 ; b <= j + 1 ; b++ ) {
+                    // Avoid compute edge with itself, values out the matrix and recompute edges
+                    if ( !( ( a == i ) and ( b == j ) ) and ( a >= 0 ) and ( a < m ) and ( b >= 0 ) and ( b < n ) ) { //and ( W( i * n + j , a * n + b ) == 0 ) ) {
+
+                        // Compute wij ( Pi is defined by i and j, Pj is defined by a and b )
+                        float wij = exp( - betta * pow( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
+                                                                                abs( chG( i , j ) - chG( a , b ) ),
+                                                                                abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / sigma ) + 10e-6;
+
+
+                        // Store the result at W in wij and wji
+                        W( i * n + j , a * n + b ) = wij;
+                        W( a * n + b , i * n + j ) = wij;
+
+                        // Compute dii
+                        tmp += wij;
+                    }
+                }
+            }
+            // Save final dii
+            D( i * n + j , i * n + j ) = tmp;
+        }
+    }
+
+    // Compute L matrix                                                                       // --> TODO: Try to do in the same loop as D and W?
+    //MatrixXf L( m * n , m * n );
+    return ( D - W );
+}
+
+
+
+
+
+
+
 void CSegmentation::run()
 {
     // Variables only for performance purposes
@@ -53,66 +119,11 @@ void CSegmentation::run()
 
     // Initialize tunning constants
     float betta = 0.005;
+    float sigma = 0.1;
 
-    // Get the R, G, B channels in BGR order
-    vector<Mat> channels(3);
-    split(I,channels);
-    Mat_<double> chR = channels[2];
-    Mat_<double> chG = channels[1];
-    Mat_<double> chB = channels[0];
-
-    //**************************
-    //
-    // Compute matrix W and D
-    //
-    //**************************
-
-    // Initialize adjency matrix W with zeros
-    MatrixXf W( m * n , m * n );
-    W = MatrixXf::Zero( m * n , m * n );
-
-    // Initialize diagonal matrix D with zeros
-    MatrixXf D( m * n , m * n );
-    D = MatrixXf::Zero( m * n , m * n );
-
-    // For each row                                                                           // --> TODO: Optimize the code changing the way to compute D
-    for ( int i = 0 ; i < m ; i++ ) {                                                         //           (avoid compute twice the same W -> uncomment condition in below if)
-        // For each column
-        for ( int j = 0 ; j < n ; j ++ ) {
-
-            // Variable to store the sum of dii
-            float tmp = 0;
-
-            // For each row of the neighborhood
-            for ( int a = i - 1 ; a <= i + 1 ; a++ ) {
-                // For each column of the neighborhood
-                for ( int b = j - 1 ; b <= j + 1 ; b++ ) {
-                    // Avoid compute edge with itself, values out the matrix and recompute edges
-                    if ( !( ( a == i ) and ( b == j ) ) and ( a >= 0 ) and ( a < m ) and ( b >= 0 ) and ( b < n ) ) { //and ( W( i * n + j , a * n + b ) == 0 ) ) {
-
-                        // Compute wij ( Pi is defined by i and j, Pj is defined by a and b )
-                        float wij = exp( - betta * pow( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
-                                                                                abs( chG( i , j ) - chG( a , b ) ),
-                                                                                abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / 0.1 ) + 10e-6;
-
-
-                        // Store the result at W in wij and wji
-                        W( i * n + j , a * n + b ) = wij;
-                        W( a * n + b , i * n + j ) = wij;
-
-                        // Compute dii
-                        tmp += wij;
-                    }
-                }
-            }
-            // Save final dii
-            D( i * n + j , i * n + j ) = tmp;
-        }
-    }
-
-    // Compute L matrix                                                                       // --> TODO: Try to do in the same loop as D and W?
+    // Compute the Graph Laplacian Matrix (L)
     MatrixXf L( m * n , m * n );
-    L = D - W;
+    L = GraphLaplacianMatrix( I, betta , sigma );
 
     //**************************
     //
