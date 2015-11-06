@@ -37,6 +37,7 @@ private:
     Eigen::MatrixXf GraphLaplacianMatrix( const cv::Mat& , const float& , const float& );
     void SeedsDependentMatrices( const int& , const int& , const int& , const int& , Eigen::MatrixXf& , Eigen::VectorXf& );
     void GraphLaplacianMatrixSquare( const int& , const int& , Eigen::MatrixXf& );
+    void ComputeLinearSystem( const Eigen::MatrixXf& , const Eigen::VectorXf& , Eigen::VectorXf& );
 
 signals:
     void sendImage( QPixmap );

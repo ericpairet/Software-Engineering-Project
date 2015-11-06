@@ -106,6 +106,34 @@ void CSegmentation::GraphLaplacianMatrixSquare( const int &m , const int &n , Ma
     L = MatrixXf(L2_sparse_test);
 }
 
+void CSegmentation::ComputeLinearSystem( const MatrixXf &Is_L , const VectorXf &b , VectorXf &X ) {
+    /*
+        // OPTION 1
+        X = Is_L.inverse() * b;
+    */
+
+    /*
+        // OPTION 2
+        X = b;
+        LDLT<MatrixXf> ldlt;
+        ldlt.compute(Is_L);
+        ldlt.solveInPlace(X);
+    */
+
+        // OPTION 3
+        X = Is_L.ldlt().solve(b);
+
+    /*
+        // OPTION 4     -->     Sparse matrix
+        SparseMatrix<float> A( m * n , m * n );
+        A = Is_L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
+
+        // Solving:
+        SimplicialCholesky<SpMat> chol(A);  // performs a Cholesky factorization of A
+        X = chol.solve(b);         // use the factorization to solve for the given right hand side
+    */
+}
+
 void CSegmentation::run()
 {
     // Variables only for performance purposes
@@ -149,83 +177,19 @@ void CSegmentation::run()
     VectorXf b( m * n );
     SeedsDependentMatrices( m , n, xf , xb , Is , b );
 
+    tstart = time(0);                                                           // ***
     // Compute the Graph Laplacian Matrix square
     GraphLaplacianMatrixSquare( m , n , L );
+    tend = time(0);                                                             // ***
+    cout << "L^2 took "<< difftime(tend, tstart) <<" second(s)."<< endl;        // ***
 
-
-
-    MatrixXf Is_L( m * n , m * n );
-
-    tstart = time(0);
-
-
-/*    Eigen::SparseMatrix<float> L_sparse( m * n , m * n );
-    L_sparse = L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
-    Eigen::SparseMatrix<float> L2_sparse_test( m * n , m * n);
-
-
-    L2_sparse_test = L_sparse * L_sparse;
-
-
-    Is_L = Is + MatrixXf(L2_sparse_test); */
-
-    Is_L = Is + L;
-    tend = time(0);
-    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
-
-    /*tstart = time(0);
-    Is_L = Is + L * L;
-    tend = time(0);
-    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
-    */
-    // Compute X
+    tstart = time(0);                                                           // ***
+    // Solve linear system
     VectorXf X( m * n );
+    ComputeLinearSystem( Is + L , b , X );
+    tend = time(0);                                                             // ***
+    cout << "Ax = B took "<< difftime(tend, tstart) <<" second(s)."<< endl;     // ***
 
-// ----------------------------------------------------------------------------------------------------------------
-/*
-    tstart = time(0);
-    // OPTION 1
-    X = Is_L.inverse() * b;
-
-    tend = time(0);
-    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
-*/
-
-/*
-    tstart = time(0);
-    // OPTION 2
-    X = b;
-    LDLT<MatrixXf> ldlt;
-    ldlt.compute(Is_L);
-    ldlt.solveInPlace(X);
-
-    tend = time(0);
-    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
-*/
-
-
-    tstart = time(0);
-    // OPTION 3
-    X = Is_L.ldlt().solve(b);
-    tend = time(0);
-    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;
-
-
-/*
-    tstart = time(0);
-    // OPTION 4     -->     Sparse matrix
-    SparseMatrix<float> A( m * n , m * n );
-    A = Is_L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
-
-    // Solving:
-    SimplicialCholesky<SpMat> chol(A);  // performs a Cholesky factorization of A
-    X = chol.solve(b);         // use the factorization to solve for the given right hand side
-
-
-    tend = time(0);
-    cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< endl;*/
-
-// ----------------------------------------------------------------------------------------------------------------
 
     //**************************
     //
