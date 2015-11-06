@@ -83,9 +83,11 @@ LIBS += -L/usr/local/lib/ \
 
 SOURCES += main.cpp \
     mainwindow.cpp \
-    widgets.cpp
+    widgets.cpp \
+    segmentation.cpp
 
 HEADERS += \
     mathtools.h \
     mainwindow.h \
-    widgets.h
+    widgets.h \
+    segmentation.h
