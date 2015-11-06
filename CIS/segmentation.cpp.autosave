@@ -148,7 +148,8 @@ void CSegmentation::run()
     MatrixXf Is( m * n , m * n );
     VectorXf b( m * n );
     SeedsDependentMatrices( m , n, xf , xb , Is , b );
-
+    
+    
     // Compute the Graph Laplacian Matrix square
     GraphLaplacianMatrixSquare( m , n , L );
 
@@ -159,15 +160,6 @@ void CSegmentation::run()
     tstart = time(0);
 
 
-/*    Eigen::SparseMatrix<float> L_sparse( m * n , m * n );
-    L_sparse = L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
-    Eigen::SparseMatrix<float> L2_sparse_test( m * n , m * n);
-
-
-    L2_sparse_test = L_sparse * L_sparse;
-
-
-    Is_L = Is + MatrixXf(L2_sparse_test); */
 
     Is_L = Is + L;
     tend = time(0);

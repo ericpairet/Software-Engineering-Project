@@ -36,6 +36,7 @@ private:
     CMonitorWidget *monitor;
     Eigen::MatrixXf GraphLaplacianMatrix( const cv::Mat& , const float& , const float& );
     void SeedsDependentMatrices( const int& , const int& , const int& , const int& , Eigen::MatrixXf& , Eigen::VectorXf& );
+    void GraphLaplacianMatrixSquare( const int& , const int& , Eigen::MatrixXf& );
 
 signals:
     void sendImage( QPixmap );
