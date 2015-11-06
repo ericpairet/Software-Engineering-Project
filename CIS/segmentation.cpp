@@ -21,7 +21,7 @@ Mat img2grey(Mat img) {
     return dst;
 }
 
-MatrixXf CSegmentation::GraphLaplacianMatrix(Mat &I , float &betta , float &sigma ) {
+MatrixXf CSegmentation::GraphLaplacianMatrix( const Mat &I , const float &betta , const float &sigma ) {
     // Take m and n image size
     int m = I.rows;
     int n = I.cols;
@@ -81,11 +81,23 @@ MatrixXf CSegmentation::GraphLaplacianMatrix(Mat &I , float &betta , float &sigm
     return ( D - W );
 }
 
+void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const int &xf , const int &xb , MatrixXf &Is , VectorXf &b ) {
 
+    // Initialize Is and b with zeros
+    Is = MatrixXf::Zero( m * n , m * n );
+    b = VectorXf::Zero( m * n );
 
+    // Compute Is matrix and b vector                                                         // --> TODO: Apply OR gate? It can avoid go through all the seeds
+    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
+        Is( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+        b( it->first + it->second * monitor->image->width() ) = xf;
+    }
+    for( QSet< QPair< int, int> >::Iterator it = monitor->bgSeeds.begin(); it != monitor->bgSeeds.end(); ++it) {
+        Is( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+        b( it->first + it->second * monitor->image->width() ) = xb;
+    }
 
-
-
+}
 
 void CSegmentation::run()
 {
@@ -125,52 +137,11 @@ void CSegmentation::run()
     MatrixXf L( m * n , m * n );
     L = GraphLaplacianMatrix( I, betta , sigma );
 
-    //**************************
-    //
-    // Solve linear system
-    //       Ax = b
-    //
-    //**************************
-
+    // Compute seeds dependent matrices (Is , b)
     // Create Is matrix and initialize with zeros
     MatrixXf Is( m * n , m * n );
-    Is = MatrixXf::Zero( m * n , m * n );
-
-    // Create b vector and initialize with zeros
     VectorXf b( m * n );
-    b = VectorXf::Zero( m*n);
-
-    /*
-    // Just for test with testImage.jpg (7x9 Pixels image)
-    fgSeeds.clear();
-    fgSeeds.append(QPair<int, int> (3, 3));
-    fgSeeds.append(QPair<int, int> (3, 4));
-    fgSeeds.append(QPair<int, int> (4, 3));
-
-    bgSeeds.clear();
-    bgSeeds.append(QPair<int, int> (1, 6));
-    bgSeeds.append(QPair<int, int> (1, 7));
-    bgSeeds.append(QPair<int, int> (2, 7));
-    bgSeeds.append(QPair<int, int> (3, 7));
-    bgSeeds.append(QPair<int, int> (4, 7));
-    bgSeeds.append(QPair<int, int> (5, 7));
-    */
-
-    // Compute Is matrix and b vector                                                         // --> TODO: Apply OR gate? It can avoid go through all the seeds
-    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it)
-    {
-        Is( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-        b( it->first + it->second * monitor->image->width() ) = xf;
-    }
-
-    for( QSet< QPair< int, int> >::Iterator it = monitor->bgSeeds.begin(); it != monitor->bgSeeds.end(); ++it)
-    {
-        Is( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-        b( it->first + it->second * monitor->image->width() ) = xb;
-    }
-
-
-
+    SeedsDependentMatrices( m , n, xf , xb , Is , b );
 
     // Compue Is_L
     qDebug() << "Starting L^2";

@@ -34,7 +34,8 @@ public slots:
 private:
     CToolsWidget *tools;
     CMonitorWidget *monitor;
-    Eigen::MatrixXf GraphLaplacianMatrix( cv::Mat& , float& , float& );
+    Eigen::MatrixXf GraphLaplacianMatrix( const cv::Mat& , const float& , const float& );
+    void SeedsDependentMatrices( const int& , const int& , const int& , const int& , Eigen::MatrixXf& , Eigen::VectorXf& );
 
 signals:
     void sendImage( QPixmap );
