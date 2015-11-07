@@ -21,7 +21,7 @@ CSegmentation::~CSegmentation()
     return dst;
 }*/
 
-void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , MatrixXd &L ) {
+void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L ) {
     // Take m and n image size
     int m = I.rows;
     int n = I.cols;
@@ -34,12 +34,16 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
     Mat_<double> chB = channels[0];
 
     // Initialize adjency matrix W with zeros
-    MatrixXd W( m * n , m * n );
-    W = MatrixXd::Zero( m * n , m * n );
+    SparseMatrix<double> W( m * n , m * n );
+    W.reserve( VectorXi::Constant( m * n , 8 ) );                                             // 8 for normal neighborhood
+    //MatrixXd W( m * n , m * n );
+    //W = MatrixXd::Zero( m * n , m * n );
 
     // Initialize diagonal matrix D with zeros
-    MatrixXd D( m * n , m * n );
-    D = MatrixXd::Zero( m * n , m * n );
+    SparseMatrix<double> D( m * n , m * n );
+    D.reserve( VectorXi::Constant( m * n , 1 ) );
+    //MatrixXd D( m * n , m * n );
+    //D = MatrixXd::Zero( m * n , m * n );
 
     // For each row                                                                           // --> TODO: Optimize the code changing the way to compute D
     for ( int i = 0 ; i < m ; i++ ) {                                                         //           (avoid compute twice the same W -> uncomment condition in below if)
@@ -63,8 +67,8 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
 
 
                         // Store the result at W in wij and wji
-                        W( i * n + j , a * n + b ) = wij;
-                        W( a * n + b , i * n + j ) = wij;
+                        W.coeffRef( i * n + j , a * n + b ) = wij;
+                        W.coeffRef( a * n + b , i * n + j ) = wij;
 
                         // Compute dii
                         tmp += wij;
@@ -72,47 +76,50 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
                 }
             }
             // Save final dii
-            D( i * n + j , i * n + j ) = tmp;
+            D.coeffRef( i * n + j , i * n + j ) = tmp;
         }
     }
 
     // Compute L matrix                                                                       // --> TODO: Try to do in the same loop as D and W?
-    //MatrixXd L( m * n , m * n );
     L = D - W;
-    //return ( D - W )
 }
 
-void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const int &xf , const int &xb , MatrixXd &Is , VectorXd &b ) {
+void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const int &xf , const int &xb , SparseMatrix<double> &Is , VectorXd &b ) {
 
     // Initialize Is and b with zeros
-    Is = MatrixXd::Zero( m * n , m * n );
+    //Is = MatrixXd::Zero( m * n , m * n );
     b = VectorXd::Zero( m * n );
+
+    int a = 0;
 
     // Compute Is matrix and b vector                                                         // --> TODO: Apply OR gate? It can avoid go through all the seeds
     for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
-        Is( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+        a = it->first + it->second * monitor->image->width();
+        Is.coeffRef( a , a ) = 1;
         b( it->first + it->second * monitor->image->width() ) = xf;
     }
     for( QSet< QPair< int, int> >::Iterator it = monitor->bgSeeds.begin(); it != monitor->bgSeeds.end(); ++it) {
-        Is( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
         b( it->first + it->second * monitor->image->width() ) = xb;
     }
 }
 
-void CSegmentation::GraphLaplacianMatrixSquare( const int &m , const int &n , MatrixXd &L ) {
-    Eigen::SparseMatrix<double> L_sparse( m * n , m * n );
+void CSegmentation::GraphLaplacianMatrixSquare( const int &m , const int &n , Eigen::SparseMatrix<double> &L ) {
+    //Eigen::SparseMatrix<double> L_sparse( m * n , m * n );
     Eigen::SparseMatrix<double> L2_sparse_test( m * n , m * n );
-    L_sparse = L.sparseView();
-    L2_sparse_test = L_sparse * L_sparse;
-    L = MatrixXd(L2_sparse_test);
+    //L_sparse = L.sparseView();
+    //L2_sparse_test = L_sparse * L_sparse;
+    L2_sparse_test = L * L;
+    //L = MatrixXd(L2_sparse_test);
+    L = L2_sparse_test;
 }
 
-void CSegmentation::ComputeLinearSystem( const int &m , const int &n , const MatrixXd &Is_L , const VectorXd &b , VectorXd &X ) {
-    SparseMatrix<double> A( m * n , m * n );
-    A = Is_L.sparseView();
+void CSegmentation::ComputeLinearSystem( const int &m , const int &n , const SparseMatrix<double> &Is_L , const VectorXd &b , VectorXd &X ) {
+    //SparseMatrix<double> A( m * n , m * n );
+    //A = Is_L.sparseView();
 
-    SimplicialCholesky<SpMat> chol( A );    // performs a Cholesky factorization of A
-    X = chol.solve( b );                    // uses the factorization to solve for the given right hand side
+    SimplicialCholesky< Eigen::SparseMatrix<double> > chol( Is_L );    // performs a Cholesky factorization of A
+    X = chol.solve( b );                       // uses the factorization to solve for the given right hand side
 }
 
 void CSegmentation::AssignLabels( const int &m , const int &n , const int &xf , const int &xb , const VectorXd &X , Mat_<double> &Y ) {
@@ -141,7 +148,7 @@ void CSegmentation::AssignLabels( const int &m , const int &n , const int &xf , 
 void CSegmentation::run()
 {
     // Variables only for performance purposes
-    time_t tstart, tend;
+    time_t globalstart, tstart, tend;
 
     // Load image to be computed ( m x n )
     // Mat I = QPixmapToCvMat( *image);
@@ -172,16 +179,20 @@ void CSegmentation::run()
     double betta = 0.005;
     double sigma = 0.1;
 
+    globalstart = time(0);                                                              // ***
+
     tstart = time(0);                                                                   // ***
     // Compute the Graph Laplacian Matrix (L)
-    MatrixXd L( m * n , m * n );
+    SparseMatrix<double> L( m * n , m * n );
+    L.reserve( VectorXi::Constant( m * n , 8 ) );
+    //MatrixXd L( m * n , m * n );
     GraphLaplacianMatrix( I , betta , sigma , L );
     tend = time(0);                                                                     // ***
     cout << "L took "<< difftime(tend, tstart) <<" second(s)."<< endl;                  // ***
 
     tstart = time(0);                                                                   // ***
     // Compute seeds dependent matrices (Is , b)
-    MatrixXd Is( m * n , m * n );
+    SparseMatrix<double> Is( m * n , m * n );
     VectorXd b( m * n );
     SeedsDependentMatrices( m , n, xf , xb , Is , b );
     tend = time(0);                                                                     // ***
@@ -233,6 +244,8 @@ void CSegmentation::run()
     tend = time(0);                                                                     // ***
     cout << "Labels took "<< difftime(tend, tstart) <<" second(s)."<< endl;             // ***
 
+    tend = time(0);                                                                     // ***
+    cout << "Segmentation took "<< difftime(tend, globalstart) <<" second(s)."<< endl;             // ***
 
     //**************************
     //
