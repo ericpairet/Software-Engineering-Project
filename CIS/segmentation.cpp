@@ -4,7 +4,7 @@ using namespace std;
 using namespace Eigen;
 using namespace cv;
 
-CSegmentation::CSegmentation( CToolsWidget *_t, CMonitorWidget *_m) : QObject()
+/*CSegmentation::CSegmentation( CToolsWidget *_t, CMonitorWidget *_m) : QObject()
 {
     tools = _t;
     monitor = _m;
@@ -14,13 +14,13 @@ CSegmentation::~CSegmentation()
 {
 
 }
-
+*/
 /*Mat img2grey(Mat img) {
     Mat dst;
     normalize(img, dst, 0.0, 1.0, NORM_MINMAX, CV_32FC3);
     return dst;
 }*/
-
+/*
 void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L ) {
     // Take m and n image size
     int m = I.rows;
@@ -143,8 +143,8 @@ void CSegmentation::AssignLabels( const int &m , const int &n , const int &xf , 
             Y( r , i - r * n ) = xf;
         }
     }
-}
-
+}*/
+/*
 void CSegmentation::run()
 {
     // Variables only for performance purposes
@@ -260,10 +260,11 @@ void CSegmentation::run()
     //cout << "Y.cols" << Y.cols << endl;
     //cout << "Y.rows" << Y.rows << endl;
     //QPixmap dest= QPixmap((uchar*) Y.data, Y.cols, Y.rows, Y.step, QPixmap::Format_RGB888);
-    QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, /*QImage::Format_Grayscale8)); */ QImage::Format_RGB32));
+    QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, /*QImage::Format_Grayscale8)); */ /*QImage::Format_RGB32));
     //q = q.scaledToWidth(1);
     // label->setPixmap( q );
     //cout << "q.width" << q.width << endl;
     //cout << "q.height" << q.height << endl;
     emit sendImage(q);
 }
+*/
