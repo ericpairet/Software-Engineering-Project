@@ -35,10 +35,11 @@ public slots:
 private:
     CToolsWidget *tools;
     CMonitorWidget *monitor;
-    Eigen::MatrixXd GraphLaplacianMatrix( const cv::Mat& , const double& , const double& );
+    void GraphLaplacianMatrix( const cv::Mat& , const double& , const double& , Eigen::MatrixXd& );
     void SeedsDependentMatrices( const int& , const int& , const int& , const int& , Eigen::MatrixXd& , Eigen::VectorXd& );
     void GraphLaplacianMatrixSquare( const int& , const int& , Eigen::MatrixXd& );
     void ComputeLinearSystem( const int& , const int& , const Eigen::MatrixXd& , const Eigen::VectorXd& , Eigen::VectorXd& );
+    void AssignLabels( const int& , const int& , const int& , const int& , const Eigen::VectorXd& , cv::Mat_<double>& );
 
 signals:
     void sendImage( QPixmap );

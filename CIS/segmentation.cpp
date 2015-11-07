@@ -15,13 +15,13 @@ CSegmentation::~CSegmentation()
 
 }
 
-Mat img2grey(Mat img) {
+/*Mat img2grey(Mat img) {
     Mat dst;
     normalize(img, dst, 0.0, 1.0, NORM_MINMAX, CV_32FC3);
     return dst;
-}
+}*/
 
-MatrixXd CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma ) {
+void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , MatrixXd &L ) {
     // Take m and n image size
     int m = I.rows;
     int n = I.cols;
@@ -58,8 +58,8 @@ MatrixXd CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta
 
                         // Compute wij ( Pi is defined by i and j, Pj is defined by a and b )
                         double wij = exp( - betta * pow( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
-                                                                                abs( chG( i , j ) - chG( a , b ) ),
-                                                                                abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / sigma ) + 10e-6;
+                                                                                 abs( chG( i , j ) - chG( a , b ) ),
+                                                                                 abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / sigma ) + 10e-6;
 
 
                         // Store the result at W in wij and wji
@@ -78,7 +78,8 @@ MatrixXd CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta
 
     // Compute L matrix                                                                       // --> TODO: Try to do in the same loop as D and W?
     //MatrixXd L( m * n , m * n );
-    return ( D - W );
+    L = D - W;
+    //return ( D - W )
 }
 
 void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const int &xf , const int &xb , MatrixXd &Is , VectorXd &b ) {
@@ -101,42 +102,40 @@ void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const 
 void CSegmentation::GraphLaplacianMatrixSquare( const int &m , const int &n , MatrixXd &L ) {
     Eigen::SparseMatrix<double> L_sparse( m * n , m * n );
     Eigen::SparseMatrix<double> L2_sparse_test( m * n , m * n );
-    L_sparse = L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
+    L_sparse = L.sparseView();
     L2_sparse_test = L_sparse * L_sparse;
     L = MatrixXd(L2_sparse_test);
 }
 
 void CSegmentation::ComputeLinearSystem( const int &m , const int &n , const MatrixXd &Is_L , const VectorXd &b , VectorXd &X ) {
-/*
-    // OPTION 1
-    X = Is_L.inverse() * b;
-*/
-
-/*
-    // OPTION 2
-    X = b;
-    LDLT<MatrixXd> ldlt;
-    ldlt.compute(Is_L);
-    ldlt.solveInPlace(X);
-*/
-/*
-    // OPTION 3
-    X = Is_L.ldlt().solve(b);
-*/
-
-    // OPTION 4     -->     Sparse matrix
     SparseMatrix<double> A( m * n , m * n );
-    A = Is_L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
+    A = Is_L.sparseView();
 
-    SparseMatrix<double> B( m * n , 1 );
-    B = b.sparseView();
+    SimplicialCholesky<SpMat> chol( A );    // performs a Cholesky factorization of A
+    X = chol.solve( b );                    // uses the factorization to solve for the given right hand side
+}
 
-    // Solving:
-    SimplicialCholesky<SpMat> chol(A);  // performs a Cholesky factorization of A
-    //X = chol.solve(b);         // use the factorization to solve for the given right hand side
-    X = MatrixXd(chol.solve(b));
+void CSegmentation::AssignLabels( const int &m , const int &n , const int &xf , const int &xb , const VectorXd &X , Mat_<double> &Y ) {
+    // Threshold to assign labels
+    double threshold = ( ( xb + xf ) / 2 );
 
+    // Variable used to reshape from vector to matrix
+    int r = 0;
 
+    // Assign labels, reshape from vector to matrix and change from eigen to opencv
+    for ( int i = 0 ; i < m * n ; i++ ) {
+
+        if ( ( i - r * n ) == n ) {
+            r++;
+        }
+
+        if ( X( i ) >= threshold ) {
+            Y( r , i - r * n ) = xb;
+        }
+        else {                          // Depends on the value of xf this can be avoided
+            Y( r , i - r * n ) = xf;
+        }
+    }
 }
 
 void CSegmentation::run()
@@ -159,7 +158,7 @@ void CSegmentation::run()
         return;
     }
 
-    // Initialize background and foreground labels (do not change the type!)
+    // Initialize background and foreground labels
     double xb = 1;
     double xf = 0;
 
@@ -173,44 +172,43 @@ void CSegmentation::run()
     double betta = 0.005;
     double sigma = 0.1;
 
-    tstart = time(0);                                                           // ***
+    tstart = time(0);                                                                   // ***
     // Compute the Graph Laplacian Matrix (L)
     MatrixXd L( m * n , m * n );
-    L = GraphLaplacianMatrix( I, betta , sigma );
-    tend = time(0);                                                             // ***
-    cout << "L took "<< difftime(tend, tstart) <<" second(s)."<< endl;          // ***
+    GraphLaplacianMatrix( I , betta , sigma , L );
+    tend = time(0);                                                                     // ***
+    cout << "L took "<< difftime(tend, tstart) <<" second(s)."<< endl;                  // ***
 
+    tstart = time(0);                                                                   // ***
     // Compute seeds dependent matrices (Is , b)
     MatrixXd Is( m * n , m * n );
     VectorXd b( m * n );
     SeedsDependentMatrices( m , n, xf , xb , Is , b );
+    tend = time(0);                                                                     // ***
+    cout << "Is and b took "<< difftime(tend, tstart) <<" second(s)."<< endl;           // ***
 
-    tstart = time(0);                                                           // ***
+    tstart = time(0);                                                                   // ***
     // Compute the Graph Laplacian Matrix square
     GraphLaplacianMatrixSquare( m , n , L );
-    tend = time(0);                                                             // ***
-    cout << "L^2 took "<< difftime(tend, tstart) <<" second(s)."<< endl;        // ***
+    tend = time(0);                                                                     // ***
+    cout << "L^2 took "<< difftime(tend, tstart) <<" second(s)."<< endl;                // ***
 
-    tstart = time(0);                                                           // ***
+    tstart = time(0);                                                                   // ***
     // Solve linear system
     VectorXd X( m * n );
     ComputeLinearSystem( m , n , Is + L , b , X );
-    tend = time(0);                                                             // ***
-    cout << "Ax = B took "<< difftime(tend, tstart) <<" second(s)."<< endl;     // ***
+    tend = time(0);                                                                     // ***
+    cout << "Ax = B took "<< difftime(tend, tstart) <<" second(s)."<< endl;             // ***
 
-
-    //**************************
-    //
+    tstart = time(0);                                                                   // ***
     // Assign labels to x
-    //    [ m x n , 1 ]
-    //
-    //**************************
+    Mat_<float> Y = Mat_<float>::zeros( m , n );
 
+    // AssignLabels( m , n , xf , xb , X , Y );         // NOT WORKING... WHY?
+
+// ///////////////////
     // Threshold to assign labels
     double threshold = ( ( xb + xf ) / 2 );
-
-    // Variable to store the segmented image
-    cv::Mat_<double> Y = Mat_<double>::zeros( m , n );        // double?
 
     // Variable used to reshape from vector to matrix
     int r = 0;
@@ -223,12 +221,18 @@ void CSegmentation::run()
         }
 
         if ( X( i ) >= threshold ) {
-            Y( r , i - r * n ) = xb;
+            Y( r , i - r * n ) = float(xb);
         }
         else {                          // Depends on the value of xf this can be avoided
-            Y( r , i - r * n ) = xf;
+            Y( r , i - r * n ) = float(xf);
         }
     }
+// ///////////////////
+
+    //AssignLabels( m , n , xf , xb , X , Y );
+    tend = time(0);                                                                     // ***
+    cout << "Labels took "<< difftime(tend, tstart) <<" second(s)."<< endl;             // ***
+
 
     //**************************
     //
@@ -237,31 +241,16 @@ void CSegmentation::run()
     //**************************
 
     // Show the segmented image
+
     //namedWindow( "SI" , CV_WINDOW_NORMAL );
-    imshow( "SI" , Y );
-    cout << "Y.cols" << Y.cols << endl;
-    cout << "Y.rows" << Y.rows << endl;
+    //imshow( "SI" , Y );
+    //cout << "Y.cols" << Y.cols << endl;
+    //cout << "Y.rows" << Y.rows << endl;
     //QPixmap dest= QPixmap((uchar*) Y.data, Y.cols, Y.rows, Y.step, QPixmap::Format_RGB888);
-    QPixmap q = QPixmap::fromImage(QImage((unsigned char*) Y.data,
-                                      Y.cols,
-                                      Y.rows,
-                                      //QImage::Format_Grayscale8));
-                                      QImage::Format_RGB32));
-       //q = q.scaledToWidth(1);
-
-      // label->setPixmap( q );
-
+    QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, /*QImage::Format_Grayscale8)); */ QImage::Format_RGB32));
+    //q = q.scaledToWidth(1);
+    // label->setPixmap( q );
     //cout << "q.width" << q.width << endl;
     //cout << "q.height" << q.height << endl;
     emit sendImage(q);
-
-/*
-    QLabel myLabel;
-        myLabel.setPixmap(QPixmap::fromImage(QImage((unsigned char*) Y.data,
-                                                    Y.cols,
-                                                    Y.rows,
-                                                    QImage::Format_RGB32)));
-
-        myLabel.show();
-*/
 }
