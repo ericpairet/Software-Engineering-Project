@@ -21,7 +21,7 @@ Mat img2grey(Mat img) {
     return dst;
 }
 
-MatrixXf CSegmentation::GraphLaplacianMatrix( const Mat &I , const float &betta , const float &sigma ) {
+MatrixXd CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma ) {
     // Take m and n image size
     int m = I.rows;
     int n = I.cols;
@@ -34,12 +34,12 @@ MatrixXf CSegmentation::GraphLaplacianMatrix( const Mat &I , const float &betta 
     Mat_<double> chB = channels[0];
 
     // Initialize adjency matrix W with zeros
-    MatrixXf W( m * n , m * n );
-    W = MatrixXf::Zero( m * n , m * n );
+    MatrixXd W( m * n , m * n );
+    W = MatrixXd::Zero( m * n , m * n );
 
     // Initialize diagonal matrix D with zeros
-    MatrixXf D( m * n , m * n );
-    D = MatrixXf::Zero( m * n , m * n );
+    MatrixXd D( m * n , m * n );
+    D = MatrixXd::Zero( m * n , m * n );
 
     // For each row                                                                           // --> TODO: Optimize the code changing the way to compute D
     for ( int i = 0 ; i < m ; i++ ) {                                                         //           (avoid compute twice the same W -> uncomment condition in below if)
@@ -47,7 +47,7 @@ MatrixXf CSegmentation::GraphLaplacianMatrix( const Mat &I , const float &betta 
         for ( int j = 0 ; j < n ; j ++ ) {
 
             // Variable to store the sum of dii
-            float tmp = 0;
+            double tmp = 0;
 
             // For each row of the neighborhood
             for ( int a = i - 1 ; a <= i + 1 ; a++ ) {
@@ -57,7 +57,7 @@ MatrixXf CSegmentation::GraphLaplacianMatrix( const Mat &I , const float &betta 
                     if ( !( ( a == i ) and ( b == j ) ) and ( a >= 0 ) and ( a < m ) and ( b >= 0 ) and ( b < n ) ) { //and ( W( i * n + j , a * n + b ) == 0 ) ) {
 
                         // Compute wij ( Pi is defined by i and j, Pj is defined by a and b )
-                        float wij = exp( - betta * pow( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
+                        double wij = exp( - betta * pow( CMaths::maximumOfThree( abs( chR( i , j ) - chR( a , b ) ),
                                                                                 abs( chG( i , j ) - chG( a , b ) ),
                                                                                 abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / sigma ) + 10e-6;
 
@@ -77,15 +77,15 @@ MatrixXf CSegmentation::GraphLaplacianMatrix( const Mat &I , const float &betta 
     }
 
     // Compute L matrix                                                                       // --> TODO: Try to do in the same loop as D and W?
-    //MatrixXf L( m * n , m * n );
+    //MatrixXd L( m * n , m * n );
     return ( D - W );
 }
 
-void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const int &xf , const int &xb , MatrixXf &Is , VectorXf &b ) {
+void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const int &xf , const int &xb , MatrixXd &Is , VectorXd &b ) {
 
     // Initialize Is and b with zeros
-    Is = MatrixXf::Zero( m * n , m * n );
-    b = VectorXf::Zero( m * n );
+    Is = MatrixXd::Zero( m * n , m * n );
+    b = VectorXd::Zero( m * n );
 
     // Compute Is matrix and b vector                                                         // --> TODO: Apply OR gate? It can avoid go through all the seeds
     for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
@@ -98,40 +98,45 @@ void CSegmentation::SeedsDependentMatrices( const int &m , const int &n , const 
     }
 }
 
-void CSegmentation::GraphLaplacianMatrixSquare( const int &m , const int &n , MatrixXf &L ) {
-    Eigen::SparseMatrix<float> L_sparse( m * n , m * n );
-    Eigen::SparseMatrix<float> L2_sparse_test( m * n , m * n );
+void CSegmentation::GraphLaplacianMatrixSquare( const int &m , const int &n , MatrixXd &L ) {
+    Eigen::SparseMatrix<double> L_sparse( m * n , m * n );
+    Eigen::SparseMatrix<double> L2_sparse_test( m * n , m * n );
     L_sparse = L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
     L2_sparse_test = L_sparse * L_sparse;
-    L = MatrixXf(L2_sparse_test);
+    L = MatrixXd(L2_sparse_test);
 }
 
-void CSegmentation::ComputeLinearSystem( const MatrixXf &Is_L , const VectorXf &b , VectorXf &X ) {
-    /*
-        // OPTION 1
-        X = Is_L.inverse() * b;
-    */
+void CSegmentation::ComputeLinearSystem( const int &m , const int &n , const MatrixXd &Is_L , const VectorXd &b , VectorXd &X ) {
+/*
+    // OPTION 1
+    X = Is_L.inverse() * b;
+*/
 
-    /*
-        // OPTION 2
-        X = b;
-        LDLT<MatrixXf> ldlt;
-        ldlt.compute(Is_L);
-        ldlt.solveInPlace(X);
-    */
+/*
+    // OPTION 2
+    X = b;
+    LDLT<MatrixXd> ldlt;
+    ldlt.compute(Is_L);
+    ldlt.solveInPlace(X);
+*/
+/*
+    // OPTION 3
+    X = Is_L.ldlt().solve(b);
+*/
 
-        // OPTION 3
-        X = Is_L.ldlt().solve(b);
+    // OPTION 4     -->     Sparse matrix
+    SparseMatrix<double> A( m * n , m * n );
+    A = Is_L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
 
-    /*
-        // OPTION 4     -->     Sparse matrix
-        SparseMatrix<float> A( m * n , m * n );
-        A = Is_L.sparseView();      // Check sparse = dense.sparseView(epsilon,reference) for better results?
+    SparseMatrix<double> B( m * n , 1 );
+    B = b.sparseView();
 
-        // Solving:
-        SimplicialCholesky<SpMat> chol(A);  // performs a Cholesky factorization of A
-        X = chol.solve(b);         // use the factorization to solve for the given right hand side
-    */
+    // Solving:
+    SimplicialCholesky<SpMat> chol(A);  // performs a Cholesky factorization of A
+    //X = chol.solve(b);         // use the factorization to solve for the given right hand side
+    X = MatrixXd(chol.solve(b));
+
+
 }
 
 void CSegmentation::run()
@@ -139,7 +144,7 @@ void CSegmentation::run()
     // Variables only for performance purposes
     time_t tstart, tend;
 
-    // Load image to be computed (mxn)
+    // Load image to be computed ( m x n )
     // Mat I = QPixmapToCvMat( *image);
     Mat I = imread( tools->imagePath.toStdString().c_str() , CV_32FC3 );
     //I = img2grey(I);
@@ -155,8 +160,8 @@ void CSegmentation::run()
     }
 
     // Initialize background and foreground labels (do not change the type!)
-    float xb = 1;
-    float xf = 0;
+    double xb = 1;
+    double xf = 0;
 
     // Check xb > xf
     if ( xb < xf ) {
@@ -165,16 +170,19 @@ void CSegmentation::run()
     }
 
     // Initialize tunning constants
-    float betta = 0.005;
-    float sigma = 0.1;
+    double betta = 0.005;
+    double sigma = 0.1;
 
+    tstart = time(0);                                                           // ***
     // Compute the Graph Laplacian Matrix (L)
-    MatrixXf L( m * n , m * n );
+    MatrixXd L( m * n , m * n );
     L = GraphLaplacianMatrix( I, betta , sigma );
+    tend = time(0);                                                             // ***
+    cout << "L took "<< difftime(tend, tstart) <<" second(s)."<< endl;          // ***
 
     // Compute seeds dependent matrices (Is , b)
-    MatrixXf Is( m * n , m * n );
-    VectorXf b( m * n );
+    MatrixXd Is( m * n , m * n );
+    VectorXd b( m * n );
     SeedsDependentMatrices( m , n, xf , xb , Is , b );
 
     tstart = time(0);                                                           // ***
@@ -185,8 +193,8 @@ void CSegmentation::run()
 
     tstart = time(0);                                                           // ***
     // Solve linear system
-    VectorXf X( m * n );
-    ComputeLinearSystem( Is + L , b , X );
+    VectorXd X( m * n );
+    ComputeLinearSystem( m , n , Is + L , b , X );
     tend = time(0);                                                             // ***
     cout << "Ax = B took "<< difftime(tend, tstart) <<" second(s)."<< endl;     // ***
 
@@ -199,10 +207,10 @@ void CSegmentation::run()
     //**************************
 
     // Threshold to assign labels
-    float threshold = ( ( xb + xf ) / 2 );
+    double threshold = ( ( xb + xf ) / 2 );
 
     // Variable to store the segmented image
-    cv::Mat_<float> Y = Mat_<float>::zeros( m , n );        // float?
+    cv::Mat_<double> Y = Mat_<double>::zeros( m , n );        // double?
 
     // Variable used to reshape from vector to matrix
     int r = 0;
@@ -230,7 +238,7 @@ void CSegmentation::run()
 
     // Show the segmented image
     //namedWindow( "SI" , CV_WINDOW_NORMAL );
-//    imshow( "SI" , Y );
+    imshow( "SI" , Y );
     cout << "Y.cols" << Y.cols << endl;
     cout << "Y.rows" << Y.rows << endl;
     //QPixmap dest= QPixmap((uchar*) Y.data, Y.cols, Y.rows, Y.step, QPixmap::Format_RGB888);

@@ -9,6 +9,7 @@
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
 
+#include <Eigen/Cholesky>
 #include <Eigen/SparseCholesky>         // just for test
 #include <Eigen/SparseCore>
 
@@ -19,7 +20,7 @@
 // only for debugging purpouses
 #include <ctime>
 
-typedef Eigen::SparseMatrix<float> SpMat; // declares a column-major sparse matrix type of double      // just for test
+typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double      // just for test
 
 class CSegmentation : public QObject
 {
@@ -34,10 +35,10 @@ public slots:
 private:
     CToolsWidget *tools;
     CMonitorWidget *monitor;
-    Eigen::MatrixXf GraphLaplacianMatrix( const cv::Mat& , const float& , const float& );
-    void SeedsDependentMatrices( const int& , const int& , const int& , const int& , Eigen::MatrixXf& , Eigen::VectorXf& );
-    void GraphLaplacianMatrixSquare( const int& , const int& , Eigen::MatrixXf& );
-    void ComputeLinearSystem( const Eigen::MatrixXf& , const Eigen::VectorXf& , Eigen::VectorXf& );
+    Eigen::MatrixXd GraphLaplacianMatrix( const cv::Mat& , const double& , const double& );
+    void SeedsDependentMatrices( const int& , const int& , const int& , const int& , Eigen::MatrixXd& , Eigen::VectorXd& );
+    void GraphLaplacianMatrixSquare( const int& , const int& , Eigen::MatrixXd& );
+    void ComputeLinearSystem( const int& , const int& , const Eigen::MatrixXd& , const Eigen::VectorXd& , Eigen::VectorXd& );
 
 signals:
     void sendImage( QPixmap );
