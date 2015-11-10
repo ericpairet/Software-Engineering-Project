@@ -88,4 +88,5 @@ SOURCES += main.cpp \
 HEADERS += \
     mathtools.h \
     mainwindow.h \
-    widgets.h
+    widgets.h \
+    segmentation.h

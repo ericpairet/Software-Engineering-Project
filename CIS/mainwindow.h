@@ -6,6 +6,7 @@
 #include <QPixmap>
 
 #include "widgets.h"
+#include "segmentation.h"
 
 class mainWindow : public QMainWindow
 {
@@ -18,7 +19,7 @@ private:
     QMdiArea *workspace; /**< The workspace to add widgets to it */
     CMonitorWidget *monitorWidget;
     CToolsWidget *toolsWidget;
-
+    CSegmentation *segTool;
 protected:
 
 signals:
