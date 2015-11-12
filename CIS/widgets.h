@@ -37,6 +37,7 @@ private slots:
     void loadSlot();
 signals:
     void imageLoaded( QPixmap);
+    void imageLoaded2( QImage);
 };
 
 class CMonitorWidget : public QWidget

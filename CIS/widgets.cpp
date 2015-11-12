@@ -139,7 +139,9 @@ void CToolsWidget::loadSlot()
     {
         //QPixmap pic( path);
         QPixmap pic = path;
+        QImage img = QImage(path);
         emit imageLoaded( pic);
+        emit imageLoaded2( img);
     }
     imagePath = path;
 }
