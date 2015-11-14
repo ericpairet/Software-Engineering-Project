@@ -20,7 +20,7 @@ mainWindow::mainWindow(QWidget *parent) : QMainWindow(parent)
     connect( toolsWidget, SIGNAL( imageLoaded2( QImage)), segTool, SLOT(setInputImage( QImage)));
 //    connect( monitorWidget, SIGNAL(imageLoaded1(QPixmap)), monitorWidget, SLOT(updateImageR(QPixmap)));
 //    connect( toolsWidget->execBtn, SIGNAL(pressed()), monitorWidget, SLOT(segmentation()));
-    connect( toolsWidget->execBtn, SIGNAL(pressed()), segTool, SLOT(run()));                                        //Pass by reference I , beta , sigma
+    connect( toolsWidget->execBtn, SIGNAL(pressed()), segTool, SLOT(run()));
     connect( toolsWidget->clearSeedsBtn, SIGNAL(pressed()), monitorWidget, SLOT(clearAllSeeds()));
     connect( segTool, SIGNAL( sendImage(QPixmap)), monitorWidget, SLOT(updateImageR(QPixmap)));
 }

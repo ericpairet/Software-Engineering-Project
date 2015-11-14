@@ -20,39 +20,19 @@ using namespace std;
 using namespace Eigen;
 using namespace cv;
 
-class CSegmentation : public QObject
-{
+class CSegmentation : public QObject {
     Q_OBJECT
 
 public:
-    CSegmentation( CToolsWidget *_t, CMonitorWidget *_m );
+    CSegmentation( CToolsWidget *_t , CMonitorWidget *_m );
     ~CSegmentation();
 
 public slots:
-    void setInputImage(QImage image);
-    void run() {
+    void setInputImage( QImage image );
 
+    void run() {
         //All this should be moved out from this CLASS
 // *****************************************************************************************************************************************************************
-        // Load image to be computed ( m x n )
-        // Mat I = QPixmapToCvMat( *image);
-        Mat *inputImage = new Mat(imread( tools->imagePath.toStdString().c_str() , CV_32FC3 ));
-//        imshow("hey", *inputImage);
-//        double min, max;
-//        cv::minMaxLoc(*inputImage, &min, &max);
-//        qDebug() << "Here " << min << max;
-        //I = img2grey(I);
-
-        // Take m and n image size
-        //int m = I.rows;
-        //int n = I.cols;
-
-        // Check if there is an image
-        /*if ( ( m * n ) == 0 ) {
-            cout << "No image" << endl;
-            return;
-        }*/
-
         // Initialize tunning constants
         double betta = 0.005;
         double sigma = 0.1;
@@ -107,16 +87,7 @@ public slots:
         //All this should be moved out from this CLASS
 // *****************************************************************************************************************************************************************
         // Show the segmented image
-        //namedWindow( "SI" , CV_WINDOW_NORMAL );
-        imshow("Out",Y);
-        //cout << "Y.cols" << Y.cols << endl;
-        //cout << "Y.rows" << Y.rows << endl;
-        //QPixmap dest= QPixmap((uchar*) Y.data, Y.cols, Y.rows, Y.step, QPixmap::Format_RGB888);
-        QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32));
-        //q = q.scaledToWidth(1);
-        // label->setPixmap( q );
-        //cout << "q.width" << q.width << endl;
-        //cout << "q.height" << q.height << endl;
+        QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
         emit sendImage(q);
 // *****************************************************************************************************************************************************************
     }
@@ -127,9 +98,10 @@ private:
     cv::Mat *inputImage;
     void GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L );
     void SeedsDependentMatrices( const int &xf , const int &xb , SparseMatrix<double> &Is , VectorXd &b );
-    inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L );}
+    inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L ); }
     void ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b , VectorXd &X );
     void AssignLabels( const int &m , const int &n , const double &xf , const double &xb , const VectorXd &X , Mat_<float> &Y );
+
 signals:
     void sendImage( QPixmap );
 };
