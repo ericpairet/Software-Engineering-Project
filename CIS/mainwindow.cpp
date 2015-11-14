@@ -13,12 +13,10 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
 
     // Tools widget
     toolsWidget = new CToolsWidget( this );
-    toolsWidget->setWindowTitle( tr( "Tools" ) );
     workspace->addSubWindow( toolsWidget , Qt::FramelessWindowHint );
 
     // Monitor widget
     monitorWidget = new CMonitorWidget( toolsWidget , this );
-    monitorWidget->setWindowTitle( tr( "Monitor" ) );
     workspace->addSubWindow( monitorWidget , Qt::FramelessWindowHint );
 
     // Link buttons with actions
