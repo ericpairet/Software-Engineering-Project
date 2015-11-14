@@ -1,32 +1,34 @@
 #include "mainwindow.h"
 
-mainWindow::mainWindow(QWidget *parent) : QMainWindow(parent)
-{
-    workspace = new QMdiArea(this);
-    setCentralWidget(workspace);
+mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
 
-    toolsWidget = new CToolsWidget( this);
-    toolsWidget->setWindowTitle(tr("Tools"));
-    workspace->addSubWindow(toolsWidget);
+    // Main window format
+    this->setWindowTitle( tr( "Segmentation" ) );
+    //this->setWindowState( Qt::WindowMaximized );
 
-    monitorWidget = new CMonitorWidget( toolsWidget, this);
-    monitorWidget->setWindowTitle(tr("Monitor"));
-    workspace->addSubWindow(monitorWidget, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-//    monitorWidget->setWindowState(Qt::WindowMaximized );
+    // Workspace
+    workspace = new QMdiArea( this );
+    //workspace->tileSubWindows();
+    setCentralWidget( workspace );
 
-    segTool = new CSegmentation( toolsWidget, monitorWidget);
+    // Tools widget
+    toolsWidget = new CToolsWidget( this );
+    toolsWidget->setWindowTitle( tr( "Tools" ) );
+    workspace->addSubWindow( toolsWidget , Qt::FramelessWindowHint );
 
-    connect( toolsWidget, SIGNAL(imageLoaded(QPixmap)), monitorWidget, SLOT(updateImage(QPixmap)));
-    connect( toolsWidget, SIGNAL( imageLoaded2( QImage)), segTool, SLOT(setInputImage( QImage)));
-//    connect( monitorWidget, SIGNAL(imageLoaded1(QPixmap)), monitorWidget, SLOT(updateImageR(QPixmap)));
-//    connect( toolsWidget->execBtn, SIGNAL(pressed()), monitorWidget, SLOT(segmentation()));
-    connect( toolsWidget->execBtn, SIGNAL(pressed()), segTool, SLOT(run()));
-    connect( toolsWidget->clearSeedsBtn, SIGNAL(pressed()), monitorWidget, SLOT(clearAllSeeds()));
-    connect( segTool, SIGNAL( sendImage(QPixmap)), monitorWidget, SLOT(updateImageR(QPixmap)));
+    // Monitor widget
+    monitorWidget = new CMonitorWidget( toolsWidget , this );
+    monitorWidget->setWindowTitle( tr( "Monitor" ) );
+    workspace->addSubWindow( monitorWidget , Qt::FramelessWindowHint );
+
+    // Link buttons with actions
+    segTool = new CSegmentation( toolsWidget , monitorWidget );
+    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
+    connect( toolsWidget , SIGNAL( imageLoaded2( QImage ) ) , segTool , SLOT( setInputImage( QImage ) ) );
+    connect( toolsWidget->execBtn , SIGNAL( pressed() ) , segTool , SLOT( run() ) );
+    connect( toolsWidget->clearSeedsBtn , SIGNAL( pressed() ) , monitorWidget , SLOT( clearAllSeeds() ) );
+    connect( segTool , SIGNAL( sendImage( QPixmap ) ) , monitorWidget , SLOT( updateImageR( QPixmap ) ) );
 }
 
-mainWindow::~mainWindow()
-{
-
-}
+mainWindow::~mainWindow() {}
 
