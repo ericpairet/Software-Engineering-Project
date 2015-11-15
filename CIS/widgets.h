@@ -16,6 +16,7 @@
 #include <QMouseEvent>
 #include <QLineEdit>
 #include <QImage>
+#include <QBitmap>
 
 #include "mathtools.h"
 

@@ -29,68 +29,7 @@ public:
 
 public slots:
     void setInputImage( QImage image );
-
-    void run() {
-        //All this should be moved out from this CLASS
-// *****************************************************************************************************************************************************************
-        // Initialize tunning constants
-        double betta = 0.005;
-        double sigma = 0.1;
-// *****************************************************************************************************************************************************************
-
-        // Save segmentation start time
-        const clock_t t_start = clock();
-
-        // Take m and n image size
-        int m = inputImage->rows;
-        int n = inputImage->cols;
-
-        // Initialize background and foreground labels
-        double xb = 1;
-        double xf = 0;
-
-        // Check xb > xf                                            // if xb and xf are hardcoded this condition can be removed
-        if ( xb < xf ) {
-            cout << "Background level must be greater than the foreground one" << endl;
-            return;
-        }
-
-        // Compute the Graph Laplacian Matrix (L)
-        SparseMatrix<double> L( m * n , m * n );
-        L.reserve( VectorXi::Constant( m * n , 8 ) );
-        GraphLaplacianMatrix( *inputImage , betta , sigma , L );
-
-        // Compute seeds dependent matrices (Is , b)
-        SparseMatrix<double> Is( m * n , m * n );
-        VectorXd b( m * n );
-        b = VectorXd::Zero( m * n );
-        SeedsDependentMatrices( xf , xb , Is , b );
-
-        // Compute the Graph Laplacian Matrix square
-        SparseMatrix<double> L2( m * n , m * n );
-        L2.reserve( VectorXi::Constant( m * n , 8 ) );
-        L2 = GraphLaplacianMatrixSquare( L );
-
-        const clock_t begin_time2 = clock();
-        // Solve linear system
-        VectorXd X( m * n );
-        ComputeLinearSystem( Is + L , b , X );
-        cout << "Ax = b took " << float( clock () - begin_time2 ) /  CLOCKS_PER_SEC << endl;
-
-        // Assign labels to x
-        Mat_<float> Y = Mat_<float>::zeros( m , n );
-        AssignLabels( m , n , xf , xb , X , Y );
-
-        // Print time tooken for segmentation process
-        cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
-
-        //All this should be moved out from this CLASS
-// *****************************************************************************************************************************************************************
-        // Show the segmented image
-        QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
-        emit sendImage(q);
-// *****************************************************************************************************************************************************************
-    }
+    void run();
 
 private:
     CToolsWidget *tools;

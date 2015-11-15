@@ -5,15 +5,16 @@ CMonitorWidget::CMonitorWidget(CToolsWidget *_tools, QWidget *parent)
     : QWidget(parent)
 {
     tools = _tools;
-    this->setFixedSize(690,390);
+    this->setFixedSize(1   ,1);
     image = new QPixmap;
-    image2 = new QPixmap;
+//    image2 = NULL;
     //image = new QPixmap(1,1);
-    //image2 = new QPixmap(1,1);
+    image2 = new QPixmap(0,0);
     mainTimer = new QTimer();
     mainTimer->setInterval(30);
     mainTimer->start();
     dragging = false;
+//    this->setStyleSheet("background-color:black;");
     connect(mainTimer,SIGNAL(timeout()),this,SLOT(repaint()));
 }
 
@@ -27,7 +28,8 @@ void CMonitorWidget::paintEvent(QPaintEvent */*event*/)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.drawPixmap( 0, 0, *image);
-    painter.drawPixmap( image->width(), 0, *image2); //100,0,image2
+    if( image2 != NULL)
+        painter.drawPixmap( image->width(), 0, *image2); //100,0,image2
     resize( image->width(), image->height());
     painter.setPen(Qt::red);
     for( QSet< QPair< int, int> >::Iterator it = fgSeeds.begin(); it != fgSeeds.end(); ++it)
@@ -40,20 +42,27 @@ void CMonitorWidget::paintEvent(QPaintEvent */*event*/)
 void CMonitorWidget::updateImage( QPixmap p)
 {
     QPixmap output( p.width(), p.height());
-    output.fill(Qt::transparent);
+//    output.fill(Qt::transparent);
     QPainter painter( &output);
     painter.drawPixmap(0, 0, p);
     image = new QPixmap(output);
+    this->setFixedSize(p.width(), p.height());
+    this->updateGeometry();
 }
 
 void CMonitorWidget::updateImageR( QPixmap p)
 {
-    QPixmap output( p.width(), p.height());
+//    image2 = new QPixmap;
+    QPixmap output( p.width()*2, p.height());
     output.fill(Qt::transparent);
     QPainter painter( &output);
-    //painter.translate(100,0);
-    painter.drawPixmap(0, 0, p);
+    QBitmap mask = p.createMaskFromColor(Qt::MaskInColor);
+    QPixmap tempImage = image->copy( image->rect());
+    tempImage.setMask(mask);
+    painter.drawPixmap(0, 0, tempImage);
+    painter.drawPixmap(p.width(), 0 , p);
     image2 = new QPixmap(output);
+//    image2->setMask(mask);
 }
 
 void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
@@ -96,6 +105,8 @@ void CMonitorWidget::clearAllSeeds()
 {
     fgSeeds.clear();
     bgSeeds.clear();
+    delete image2;
+    image2 = new QPixmap(0,0);
 }
 
 //Tools Widget for handling the tools (this class is temperory, we can put everything we need here for know, then we can separate them
@@ -134,7 +145,7 @@ CToolsWidget::~CToolsWidget()
 
 void CToolsWidget::loadSlot()
 {
-    QString path = QFileDialog::getOpenFileName(this, tr("Load image"), "./", tr("Image files (*.jpg *.jpeg *.png)"));
+    QString path = QFileDialog::getOpenFileName(this, tr("Load image"), "./../Images", tr("Image files (*.jpg *.jpeg *.png)"));
     if(path != "")
     {
         //QPixmap pic( path);

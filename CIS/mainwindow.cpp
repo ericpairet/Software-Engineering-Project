@@ -17,15 +17,23 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
 
     // Monitor widget
     monitorWidget = new CMonitorWidget( toolsWidget , this );
-    workspace->addSubWindow( monitorWidget , Qt::FramelessWindowHint );
+    workspace->addSubWindow( monitorWidget/* , Qt::FramelessWindowHint */);
 
     // Link buttons with actions
     segTool = new CSegmentation( toolsWidget , monitorWidget );
+
+
+    segmentationThread = new QThread(this);
+    segTool->moveToThread(segmentationThread);
+    segmentationThread->start();
+
     connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
     connect( toolsWidget , SIGNAL( imageLoaded2( QImage ) ) , segTool , SLOT( setInputImage( QImage ) ) );
-    connect( toolsWidget->execBtn , SIGNAL( pressed() ) , segTool , SLOT( run() ) );
-    connect( toolsWidget->clearSeedsBtn , SIGNAL( pressed() ) , monitorWidget , SLOT( clearAllSeeds() ) );
-    connect( segTool , SIGNAL( sendImage( QPixmap ) ) , monitorWidget , SLOT( updateImageR( QPixmap ) ) );
+    connect( toolsWidget->execBtn , SIGNAL( clicked() ) , segTool, SLOT( run()));
+    connect( toolsWidget->clearSeedsBtn , SIGNAL( clicked()) , monitorWidget , SLOT( clearAllSeeds() ) );
+    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( clearAllSeeds()));
+    connect( segTool , SIGNAL( sendImage( QPixmap ) ) , monitorWidget , SLOT( updateImageR( QPixmap ) ), Qt::QueuedConnection );
+//    connect( segmentationThread, SIGNAL(finished()), segmentationThread, SLOT(quit()));
 }
 
 mainWindow::~mainWindow() {}

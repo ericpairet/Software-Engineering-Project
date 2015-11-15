@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QMdiArea>
 #include <QPixmap>
+#include <QThread>
 
 #include "widgets.h"
 #include "segmentation.h"
@@ -20,6 +21,7 @@ private:
     CMonitorWidget *monitorWidget;
     CToolsWidget *toolsWidget;
     CSegmentation *segTool;
+    QThread *segmentationThread;
 };
 
 #endif // MAINWINDOW_H
