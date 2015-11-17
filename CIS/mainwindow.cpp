@@ -25,9 +25,9 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
     segTool = new CSegmentation( toolsWidget , monitorWidget );
 
 
-   // segmentationThread = new QThread(this);
-    //segTool->moveToThread(segmentationThread);
-    //segmentationThread->start();
+    segmentationThread = new QThread(this);
+    segTool->moveToThread(segmentationThread);
+    segmentationThread->start();
 
     connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
     connect( toolsWidget , SIGNAL( imageLoaded2( QImage ) ) , segTool , SLOT( setInputImage( QImage ) ) );
@@ -35,7 +35,7 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
     connect( toolsWidget->clearSeedsBtn , SIGNAL( clicked()) , monitorWidget , SLOT( clearAllSeeds() ) );
     connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( clearAllSeeds()));
     connect( segTool , SIGNAL( sendImage( QPixmap ) ) , monitorWidget , SLOT( updateImageR( QPixmap ) )/*, Qt::QueuedConnection*/ );
-//    connect( segmentationThread, SIGNAL(finished()), segmentationThread, SLOT(quit()));
+    //connect( segmentationThread, SIGNAL(finished()), segmentationThread, SLOT(quit()));
 }
 
 mainWindow::~mainWindow() {}
