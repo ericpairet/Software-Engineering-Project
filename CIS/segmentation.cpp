@@ -57,7 +57,7 @@ void CSegmentation::run() {
     begin_time = clock();
     // Solve linear system
     VectorXd X( m * n );
-    ComputeLinearSystem( Is + L , b , X );
+    ComputeLinearSystem( Is + L2 , b , X );
     cout << "Ax = b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 
     begin_time = clock();
@@ -68,8 +68,6 @@ void CSegmentation::run() {
 
     // Print time tooken for segmentation process
     cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
-
-    imshow("afawefw", Y);
 
     //All this should be moved out from this CLASS
 // *****************************************************************************************************************************************************************
@@ -93,7 +91,7 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
 
     // Initialize adjency matrix W with zeros
     SparseMatrix<double> W( m * n , m * n );
-    W.reserve( VectorXi::Constant( m * n , 8 ) );                                             // Check reserved space for sparse matrices
+    W.reserve( VectorXi::Constant( m * n , 8 ) );
 
     // Initialize diagonal matrix D with zeros
     SparseMatrix<double> D( m * n , m * n );
@@ -151,9 +149,8 @@ void CSegmentation::SeedsDependentMatrices( const int &xf , const int &xb , Spar
     }
 }
 
-void CSegmentation::ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b , VectorXd &X ) {
-    //SimplicialCholesky< SparseMatrix<double>, Eigen::Symmetric > chol( Is_L );
-    SimplicialCholesky< SparseMatrix<double> > chol( Is_L );
+void CSegmentation::ComputeLinearSystem( const SparseMatrix<double> &Is_L2 , const VectorXd &b , VectorXd &X ) {
+    SimplicialCholesky< SparseMatrix<double> > chol( Is_L2 );
     X = chol.solve( b );
 }
 
