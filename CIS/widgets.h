@@ -17,6 +17,7 @@
 #include <QLineEdit>
 #include <QImage>
 #include <QBitmap>
+#include <QSlider>
 
 #include "mathtools.h"
 
@@ -30,12 +31,15 @@ public:
     QLineEdit *penSize;
     QPushButton *execBtn, *clearSeedsBtn;
     QString imagePath;
+    QSlider *bethaSlider;
 private:
     QPushButton *loadButton;
     QLabel *loadLabel;
     QLabel *seedLabel;
+    QLabel *bethaName, *bethaVal;
 private slots:
     void loadSlot();
+    void updateBethaValue(int _val);
 signals:
     void imageLoaded( QPixmap);
     void imageLoaded2( QImage);

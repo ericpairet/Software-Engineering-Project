@@ -65,6 +65,7 @@ void CMonitorWidget::updateImageR( QPixmap p)
     painter.drawPixmap(0, 0, tempImage);
     painter.drawPixmap(p.width(), 0 , p);
     image2 = new QPixmap(output);
+
 //    image2->setMask(mask);
 }
 
@@ -128,6 +129,13 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     penSize = new QLineEdit("1");
     execBtn = new QPushButton("Execute");
     clearSeedsBtn = new QPushButton("Clear");
+    bethaSlider = new QSlider(this);
+    bethaSlider->setRange(0, 10000);
+    bethaSlider->setValue(50);
+    bethaSlider->setOrientation(Qt::Horizontal);
+    bethaSlider->setTickInterval(1);
+    bethaName = new QLabel("Betha :");
+    bethaVal = new QLabel("0.005");
     lOut->addWidget( loadLabel, 0, 0);
     lOut->addWidget( loadButton, 0, 1);
     lOut->addWidget( seedLabel, 1, 0);
@@ -137,8 +145,11 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     lOut->addWidget( penSize, 2,0);
     lOut->addWidget( clearSeedsBtn, 3,0);
     lOut->addWidget( execBtn, 4,0);
-
+    lOut->addWidget( bethaName, 5, 0);
+    lOut->addWidget( bethaVal, 5, 1);
+    lOut->addWidget( bethaSlider, 6,0, 1, 2);
     connect( loadButton, SIGNAL(pressed()), this, SLOT(loadSlot()));
+    connect( bethaSlider, SIGNAL( valueChanged(int)), this, SLOT(updateBethaValue(int)));
 }
 
 CToolsWidget::~CToolsWidget()
@@ -160,3 +171,7 @@ void CToolsWidget::loadSlot()
     imagePath = path;
 }
 
+void CToolsWidget::updateBethaValue(int _val)
+{
+    bethaVal->setText(QString("%1").arg(_val/10000.0));
+}

@@ -30,12 +30,14 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
     segmentationThread->start();
 
     connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
-    connect( toolsWidget , SIGNAL( imageLoaded2( QImage ) ) , segTool , SLOT( setInputImage( QImage ) ) );
+    connect( toolsWidget , SIGNAL( imageLoaded2( QImage ) ) , segTool , SLOT( setInputImage( QImage ) ), Qt::BlockingQueuedConnection );
     connect( toolsWidget->execBtn , SIGNAL( clicked() ) , segTool, SLOT( run()));
     connect( toolsWidget->clearSeedsBtn , SIGNAL( clicked()) , monitorWidget , SLOT( clearAllSeeds() ) );
     connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( clearAllSeeds()));
-    connect( segTool , SIGNAL( sendImage( QPixmap ) ) , monitorWidget , SLOT( updateImageR( QPixmap ) )/*, Qt::QueuedConnection*/ );
+    connect( segTool , SIGNAL( sendImage( QPixmap ) ) , monitorWidget , SLOT( updateImageR( QPixmap ) ), Qt::BlockingQueuedConnection );
+    connect( toolsWidget->bethaSlider, SIGNAL( valueChanged(int)), segTool, SLOT( setBetha(int)), Qt::BlockingQueuedConnection);
     //connect( segmentationThread, SIGNAL(finished()), segmentationThread, SLOT(quit()));
+
 }
 
 mainWindow::~mainWindow() {}

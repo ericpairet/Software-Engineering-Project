@@ -3,6 +3,7 @@
 CSegmentation::CSegmentation( CToolsWidget *_t , CMonitorWidget *_m ) : QObject() {
     tools = _t;
     monitor = _m;
+    betta = 0.005;
 }
 
 CSegmentation::~CSegmentation() {}
@@ -17,7 +18,6 @@ void CSegmentation::run() {
     //All this should be moved out from this CLASS
 // *****************************************************************************************************************************************************************
     // Initialize tunning constants
-    double betta = 0.005;
     double sigma = 0.1;
 // *****************************************************************************************************************************************************************
 
@@ -72,8 +72,10 @@ void CSegmentation::run() {
     //All this should be moved out from this CLASS
 // *****************************************************************************************************************************************************************
     // Show the segmented image
-    QPixmap q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
+    q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
     emit sendImage(q);
+//    imshow("deded",Y);
+//    qDebug() << "SEf ef srf sr sdr ";
 // *****************************************************************************************************************************************************************
 }
 
@@ -172,4 +174,9 @@ void CSegmentation::AssignLabels( const int &m , const int &n , const double &xf
             Y( r , i - r * n ) = float(xb);
         }
     }
+}
+
+void CSegmentation::setBetha(int _val)
+{
+    betta = _val/10000.0;
 }

@@ -30,11 +30,14 @@ public:
 public slots:
     void setInputImage( QImage image );
     void run();
+    void setBetha( int _val);
 
 private:
     CToolsWidget *tools;
     CMonitorWidget *monitor;
     cv::Mat *inputImage;
+    QPixmap q;
+    double betta;
     void GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L );
     void SeedsDependentMatrices( const int &xf , const int &xb , SparseMatrix<double> &Is , VectorXd &b );
     inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L ); }
