@@ -47,7 +47,6 @@ void CSegmentation::run() {
     begin_time = clock();
     // Compute the Graph Laplacian Matrix square
     SparseMatrix<double> L2( m * n , m * n );
-    L2.reserve( VectorXi::Constant( m * n , 8 ) );
     L2 = GraphLaplacianMatrixSquare( L );
     cout << "L^2 took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 
@@ -66,14 +65,9 @@ void CSegmentation::run() {
     // Print time tooken for segmentation process
     cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
 
-    //All this should be moved out from this CLASS
-// *****************************************************************************************************************************************************************
     // Show the segmented image
     q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
     emit sendImage(q);
-//    imshow("deded",Y);
-//    qDebug() << "SEf ef srf sr sdr ";
-// *****************************************************************************************************************************************************************
 }
 
 void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L ) {
@@ -108,7 +102,7 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
                                                                                  abs( chG( i , j ) - chG( a , b ) ),
                                                                                  abs( chB( i , j ) - chB( a , b ) ) ) , 2 ) / sigma ) + 10e-6;
 
-                        // Store the result at W in wij
+                        // Store the result wij in L
                         L.coeffRef( i * n + j , a * n + b ) = -wij;
 
                         // Compute dii
@@ -116,7 +110,7 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
                     }
                 }
             }
-            // Save final dii
+            // Save final dii in L
             L.coeffRef( i * n + j , i * n + j ) = dii;
         }
     }
