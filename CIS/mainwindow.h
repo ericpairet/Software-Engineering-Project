@@ -18,10 +18,14 @@ public:
 
 private:
     QMdiArea *workspace;
+    CTabDockWidget *tabWidget;
     CMonitorWidget *monitorWidget;
     CToolsWidget *toolsWidget;
     CSegmentation *segTool;
     QThread *segmentationThread;
+    CViewerWidget *viewer;
+private slots:
+    void addWidgetToViewer( QPixmap p);
 };
 
 #endif // MAINWINDOW_H

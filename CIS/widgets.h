@@ -18,8 +18,21 @@
 #include <QImage>
 #include <QBitmap>
 #include <QSlider>
+#include <QSizePolicy>
+#include <QDockWidget>
 
 #include "mathtools.h"
+
+class CTabDockWidget : public QDockWidget
+{
+    Q_OBJECT
+public:
+        CTabDockWidget(QWidget* parent);
+        ~CTabDockWidget();
+        QTabWidget *tabs;
+        QWidget* w;
+};
+
 
 class CToolsWidget : public QWidget
 {
@@ -55,20 +68,30 @@ public:
     QPixmap *image;
 private:
     CToolsWidget *tools;
-    QPixmap *image2;
     QTimer* mainTimer;
     bool dragging;
 public slots:
     void updateImage( QPixmap);
-    void updateImageR( QPixmap);
     void clearAllSeeds();
+    inline void setInputImage( QPixmap _p){ image = new QPixmap( _p);}
 private slots:
     void paintEvent(QPaintEvent *);
     void mouseMoveEvent(QMouseEvent *event);
-//    void mousePressEvent(QMouseEvent);
-//    void mouseReleaseEvent(QMouseEvent);
 signals:
     void imageLoaded1( QPixmap);
+};
+
+class CViewerWidget : public QTabWidget
+{
+    Q_OBJECT
+public:
+    CViewerWidget( QWidget *parent = 0);
+    ~CViewerWidget();
+private:
+//    QTabWidget *tabs;
+//    QGridLayout *layOut;
+public slots:
+//    void openImage( QPixmap);
 };
 
 #endif // WIDGETS_H

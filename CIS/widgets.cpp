@@ -1,15 +1,31 @@
 #include "widgets.h"
 
+
+CTabDockWidget::CTabDockWidget(QWidget* parent)
+    : QDockWidget(parent)
+{
+    w = new QWidget(this);
+    tabs = new QTabWidget(w);
+    QGridLayout *layout = new QGridLayout(w);
+    tabs->setTabPosition(QTabWidget::East);
+    layout->addWidget(tabs,0,0);
+    w->setLayout(layout);
+    setWidget(w);
+}
+
+
+CTabDockWidget::~CTabDockWidget()
+{
+    delete tabs;
+    delete w;
+}
+
 //Monitor Widget for showing the image
 CMonitorWidget::CMonitorWidget(CToolsWidget *_tools, QWidget *parent)
     : QWidget(parent)
 {
     tools = _tools;
-    this->setFixedSize(690,360); //1,1
     image = new QPixmap;
-//    image2 = NULL;
-    //image = new QPixmap(1,1);
-    image2 = new QPixmap; //(0,0)
     mainTimer = new QTimer();
     mainTimer->setInterval(30);
     mainTimer->start();
@@ -28,9 +44,6 @@ void CMonitorWidget::paintEvent(QPaintEvent */*event*/)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.drawPixmap( 0, 0, *image);
-    if( image2 != NULL)
-        painter.drawPixmap( image->width(), 0, *image2); //100,0,image2
-    resize( image->width(), image->height());
     painter.setPen(Qt::red);
     for( QSet< QPair< int, int> >::Iterator it = fgSeeds.begin(); it != fgSeeds.end(); ++it)
         painter.drawPoint( it->first, it->second);
@@ -47,26 +60,6 @@ void CMonitorWidget::updateImage( QPixmap p)
     QPainter painter( &output);
     painter.drawPixmap(0, 0, p);
     image = new QPixmap(output);
-    //this->setFixedSize(p.width(), p.height());
-    //this->updateGeometry();
-}
-
-//Updating Output Image
-void CMonitorWidget::updateImageR( QPixmap p)
-{
-//    image2 = new QPixmap;
-    QPixmap output( p.width(), p.height());
-    output.fill(Qt::transparent);
-    QPainter painter( &output);
-    //Setting the mask for the output Image
-    QBitmap mask = p.createMaskFromColor(Qt::MaskInColor);
-    QPixmap tempImage = image->copy( image->rect());
-    tempImage.setMask(mask);
-    painter.drawPixmap(0, 0, tempImage);
-    painter.drawPixmap(p.width(), 0 , p);
-    image2 = new QPixmap(output);
-
-//    image2->setMask(mask);
 }
 
 void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
@@ -109,8 +102,18 @@ void CMonitorWidget::clearAllSeeds()
 {
     fgSeeds.clear();
     bgSeeds.clear();
-    delete image2;
-    image2 = new QPixmap(0,0);
+}
+
+//Viewer widget;
+CViewerWidget::CViewerWidget( QWidget *parent)
+    : QTabWidget(parent)
+{
+
+}
+
+CViewerWidget::~CViewerWidget()
+{
+
 }
 
 //Tools Widget for handling the tools (this class is temperory, we can put everything we need here for know, then we can separate them
