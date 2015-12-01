@@ -24,8 +24,9 @@ private:
     CSegmentation *segTool;
     QThread *segmentationThread;
     CViewerWidget *viewer;
+    CSeedSelectionWidget *seedsWidget;
 private slots:
-    void addWidgetToViewer( QPixmap p);
+    void addWidgetToViewer(QPixmap p, bool isNewPic);
 };
 
 #endif // MAINWINDOW_H

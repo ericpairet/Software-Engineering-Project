@@ -31,6 +31,7 @@ CMonitorWidget::CMonitorWidget(CToolsWidget *_tools, QWidget *parent)
     mainTimer->start();
     dragging = false;
     this->setStyleSheet("background-color:black;");
+    seedName = "";
     connect(mainTimer,SIGNAL(timeout()),this,SLOT(repaint()));
 }
 
@@ -44,22 +45,18 @@ void CMonitorWidget::paintEvent(QPaintEvent */*event*/)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.drawPixmap( 0, 0, *image);
-    painter.setPen(Qt::red);
-    for( QSet< QPair< int, int> >::Iterator it = fgSeeds.begin(); it != fgSeeds.end(); ++it)
-        painter.drawPoint( it->first, it->second);
-    painter.setPen(Qt::blue);
-    for( QSet< QPair< int, int> >::Iterator it = bgSeeds.begin(); it != bgSeeds.end(); ++it)
-        painter.drawPoint( it->first, it->second);
+    for( QMap< QString, QSet< QPair< int, int> > >::iterator it = seedsPos.begin(); it != seedsPos.end(); it++)
+    {
+        painter.setPen( seedsColor[it.key()]);
+        for( QSet< QPair< int, int> >::iterator itt = it->begin(); itt != it->end(); ++itt)
+            painter.drawPoint( itt->first, itt->second);
+    }
 }
 
 //Updating Input Image
 void CMonitorWidget::updateImage( QPixmap p)
 {
-    QPixmap output( p.width(), p.height());
-    output.fill(Qt::transparent);
-    QPainter painter( &output);
-    painter.drawPixmap(0, 0, p);
-    image = new QPixmap(output);
+    image = new QPixmap( p);
 }
 
 void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
@@ -68,40 +65,20 @@ void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
     int screenPosY = event->pos().y();
     qDebug() << screenPosX << screenPosY;
     int size = tools->penSize->text().toInt();
-    if( tools->fgRadioButton->isChecked() && image->rect().contains( screenPosX, screenPosY))
+    if( image->rect().contains( screenPosX, screenPosY) && seedName != "")
     {
-        fgSeeds.insert( QPair< int, int>( screenPosX, screenPosY));
+        seedsPos[seedName].insert( QPair< int, int>( screenPosX, screenPosY));
         for(int i = -size+1 ; i < size; i++)
             for( int j = -size+1 ; j < size; j++)
                 if( sqrt( i*i+j*j) < size && image->rect().contains( screenPosX+i, screenPosY+j))
-                    fgSeeds.insert( QPair< int, int>( screenPosX+i, screenPosY+j));
-    }
-    else if( tools->bgRadioButton->isChecked() && image->rect().contains( screenPosX, screenPosY))
-    {
-        bgSeeds.insert( QPair< int, int>( screenPosX, screenPosY));
-        for(int i = -size+1 ; i < size; i++)
-            for( int j = -size+1 ; j < size; j++)
-                if( sqrt( i*i+j*j) <= size && image->rect().contains( screenPosX+i, screenPosY+j))
-                    bgSeeds.insert( QPair< int, int>( screenPosX+i, screenPosY+j));
-    }
-    else
-    {
-        fgSeeds.remove( QPair< int, int>( screenPosX, screenPosY));
-        bgSeeds.remove( QPair< int, int>( screenPosX, screenPosY));
-        for(int i = -size+1 ; i < size; i++)
-            for( int j = -size+1 ; j < size; j++)
-                if(sqrt( i*i+j*j) <= size)
-                {
-                    fgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
-                    bgSeeds.remove( QPair< int, int>( screenPosX+i, screenPosY+j));
-                }
+                    seedsPos[seedName].insert( QPair< int, int>( screenPosX+i, screenPosY+j));
     }
 }
 
 void CMonitorWidget::clearAllSeeds()
 {
-    fgSeeds.clear();
-    bgSeeds.clear();
+    seedsColor.clear();
+    seedsPos.clear();
 }
 
 //Viewer widget;
@@ -151,6 +128,7 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     lOut->addWidget( bethaName, 5, 0);
     lOut->addWidget( bethaVal, 5, 1);
     lOut->addWidget( bethaSlider, 6,0, 1, 2);
+
     connect( loadButton, SIGNAL(pressed()), this, SLOT(loadSlot()));
     connect( bethaSlider, SIGNAL( valueChanged(int)), this, SLOT(updateBethaValue(int)));
 }
@@ -168,7 +146,7 @@ void CToolsWidget::loadSlot()
         //QPixmap pic( path);
         QPixmap pic = path;
         QImage img = QImage(path);
-        emit imageLoaded( pic);
+        emit imageLoaded( pic, true);
         emit imageLoaded2( img);
     }
     imagePath = path;
@@ -177,4 +155,88 @@ void CToolsWidget::loadSlot()
 void CToolsWidget::updateBethaValue(int _val)
 {
     bethaVal->setText(QString("%1").arg(_val/10000.0));
+}
+
+//seed widget:
+CSeedWidget::CSeedWidget(QString name, QButtonGroup *gp, QWidget *parent)
+    : QWidget( parent)
+{
+    QGridLayout *lOut = new QGridLayout( this);
+    selected = new QRadioButton( parent);
+    lOut->addWidget( selected, 0, 0);
+    seedName = new QLabel( name);
+    lOut->addWidget( seedName, 0, 1);
+    colorSelectBtn = new QPushButton();
+    lOut->addWidget( colorSelectBtn, 0, 2);
+    this->setLayout( lOut);
+    gp->addButton( selected);
+
+    connect( colorSelectBtn, SIGNAL( clicked()), this, SLOT(setColor()));
+    connect( selected, SIGNAL( clicked(bool)), this, SLOT( emitSeedChanged(bool)));
+    emit colorSelectBtn->clicked(true);
+}
+
+CSeedWidget::~CSeedWidget()
+{
+
+}
+
+void CSeedWidget::setColor()
+{
+    seedColor = QColorDialog::getColor(QColor( rand()%256, rand()%256, rand()%256));
+    QPalette p = colorSelectBtn->palette();
+    p.setColor( QPalette::Button, seedColor);
+    colorSelectBtn->setAutoFillBackground( true);
+    colorSelectBtn->setPalette( p);
+    colorSelectBtn->update();
+}
+
+void CSeedWidget::emitSeedChanged(bool is)
+{
+    if( is)
+        emit seedChanged( seedName->text(), seedColor);
+}
+
+//Seeds selection Widget
+CSeedSelectionWidget::CSeedSelectionWidget(QWidget *parent)
+    : QWidget( parent)
+{
+    lOut = new QGridLayout( this);
+    addSeedBtn = new QPushButton( "Add Seed !");
+    lOut->addWidget( addSeedBtn);
+    this->setLayout( lOut);
+    buttonsGroup = new QButtonGroup( this);
+
+    connect( addSeedBtn, SIGNAL(clicked()), this, SLOT(addNewSeed()));
+}
+
+CSeedSelectionWidget::~CSeedSelectionWidget()
+{
+
+}
+
+void CSeedSelectionWidget::addNewSeed()
+{
+    QString name = (seeds.isEmpty()?"BackGround":QString("ForeGround %1").arg(seeds.count()));
+    CSeedWidget *s = new CSeedWidget( name, buttonsGroup, this);
+    seeds.append( s);
+    lOut->addWidget( seeds.last(), seeds.count(), 0);
+    update();
+    connect( s, SIGNAL( seedChanged(QString,QColor)), this, SLOT( emitSelectedSeed(QString,QColor)));
+}
+
+void CSeedSelectionWidget::emitSelectedSeed( QString _n, QColor _c)
+{
+    emit selectedSeedSignal( _n, _c);
+}
+
+void CSeedSelectionWidget::removeSeeds()
+{
+    for( int i = 0; i < seeds.count(); i++)
+    {
+        lOut->removeWidget( seeds.at(i));
+        delete seeds.at(i);
+    }
+    seeds.clear();
+    update();
 }

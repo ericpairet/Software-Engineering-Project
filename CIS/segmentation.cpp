@@ -15,6 +15,10 @@ void CSegmentation::setInputImage( QImage image ) {
 }
 
 void CSegmentation::run() {
+
+    for( int index = 1; index < monitor->seedsColor.count(); index++)
+    {
+
     //All this should be moved out from this CLASS
 // *****************************************************************************************************************************************************************
     // Initialize tunning constants
@@ -44,7 +48,7 @@ void CSegmentation::run() {
     SparseMatrix<double> Is( m * n , m * n );
     VectorXd b( m * n );
     b = VectorXd::Zero( m * n );
-    SeedsDependentMatrices( xf , xb , Is , b );
+    SeedsDependentMatrices( xf , xb , Is , b , index);
     cout << "Is and b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 
     begin_time = clock();
@@ -73,10 +77,11 @@ void CSegmentation::run() {
 // *****************************************************************************************************************************************************************
     // Show the segmented image
     q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
-    emit sendImage(q);
+    emit sendImage(q, false);
 //    imshow("deded",Y);
 //    qDebug() << "SEf ef srf sr sdr ";
 // *****************************************************************************************************************************************************************
+    }
 }
 
 void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L ) {
@@ -139,15 +144,40 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
     L = D - W;
 }
 
-void CSegmentation::SeedsDependentMatrices( const int &xf , const int &xb , SparseMatrix<double> &Is , VectorXd &b ) {
+void CSegmentation::SeedsDependentMatrices(const int &xf , const int &xb , SparseMatrix<double> &Is , VectorXd &b , int ind) {
     // Compute Is matrix and b vector
-    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
-        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-        b( it->first + it->second * monitor->image->width() ) = xf;
-    }
-    for( QSet< QPair< int, int> >::Iterator it = monitor->bgSeeds.begin(); it != monitor->bgSeeds.end(); ++it) {
-        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-        b( it->first + it->second * monitor->image->width() ) = xb;
+//    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
+//        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+//        b( it->first + it->second * monitor->image->width() ) = xf;
+//    }
+//    for( QSet< QPair< int, int> >::Iterator it = monitor->bgSeeds.begin(); it != monitor->bgSeeds.end(); ++it) {
+//        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+//        b( it->first + it->second * monitor->image->width() ) = xb;
+//    }
+
+//    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
+//        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
+//        b( it->first + it->second * monitor->image->width() ) = xf;
+//    }
+
+    for( QMap< QString, QSet< QPair< int, int> > >::iterator it = monitor->seedsPos.begin(); it != monitor->seedsPos.end(); it++)
+    {
+        if( ind == it.key().right(2).toInt())
+        {
+            for( QSet< QPair< int, int> >::Iterator itt = it->begin(); itt != it->end(); ++itt)
+            {
+                Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt-> first + itt->second * monitor->image->width() ) = 1;
+                b( itt->first + itt->second * monitor->image->width() ) = xb;
+            }
+        }
+        else
+        {
+            for( QSet< QPair< int, int> >::iterator itt = it->begin(); itt != it->end(); ++itt)
+            {
+                Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt->first + itt->second * monitor->image->width() ) = 1;
+                b( itt->first + itt->second * monitor->image->width() ) = xf;
+            }
+        }
     }
 }
 

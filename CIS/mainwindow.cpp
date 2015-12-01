@@ -1,10 +1,10 @@
 #include "mainwindow.h"
 
-mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
+mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
 
     // Main window format
    // this->setWindowTitle( tr( "Segmentation" ) );
-    //this->setWindowState( Qt::WindowMaximized );
+    this->setWindowState( Qt::WindowMaximized );
 
     // Workspace
     workspace = new QMdiArea( this );
@@ -17,6 +17,10 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
     // Tools widget
     toolsWidget = new CToolsWidget( this );
     tabWidget->tabs->addTab( toolsWidget, "Tools");
+
+    //Seeds widget
+    seedsWidget = new CSeedSelectionWidget();
+    tabWidget->tabs->addTab( seedsWidget, "Seed Selection");
 
     // Monitor widget
     monitorWidget = new CMonitorWidget( toolsWidget , this );
@@ -34,21 +38,25 @@ mainWindow::mainWindow( QWidget *parent ) : QMainWindow( parent ) {
     segTool->moveToThread(segmentationThread);
     segmentationThread->start();
 
-    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
-    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , this, SLOT( addWidgetToViewer(QPixmap)));
-    connect( toolsWidget , SIGNAL( imageLoaded2( QImage ) ) , segTool , SLOT( setInputImage( QImage ) ), Qt::BlockingQueuedConnection );
+    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap, bool)) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
+    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap, bool)) , this, SLOT( addWidgetToViewer(QPixmap, bool)));
+    connect( toolsWidget , SIGNAL( imageLoaded2( QImage)) , segTool , SLOT( setInputImage( QImage ) ), Qt::BlockingQueuedConnection );
     connect( toolsWidget->execBtn , SIGNAL( clicked() ) , segTool, SLOT( run()));
     connect( toolsWidget->clearSeedsBtn , SIGNAL( clicked()) , monitorWidget , SLOT( clearAllSeeds() ) );
-    connect( toolsWidget , SIGNAL( imageLoaded( QPixmap ) ) , monitorWidget , SLOT( clearAllSeeds()));
-    connect( segTool , SIGNAL( sendImage( QPixmap ) ) , this, SLOT( addWidgetToViewer(QPixmap)), Qt::BlockingQueuedConnection );
+    connect( toolsWidget, SIGNAL( imageLoaded( QPixmap, bool)), seedsWidget, SLOT( removeSeeds()));
+    connect( toolsWidget, SIGNAL( imageLoaded( QPixmap, bool)), monitorWidget, SLOT( clearAllSeeds()));
+    connect( segTool , SIGNAL( sendImage( QPixmap, bool) ) , this, SLOT( addWidgetToViewer(QPixmap, bool)), Qt::BlockingQueuedConnection );
     connect( toolsWidget->bethaSlider, SIGNAL( valueChanged(int)), segTool, SLOT( setBetha(int)), Qt::BlockingQueuedConnection);
-
+    connect( seedsWidget, SIGNAL( selectedSeedSignal(QString,QColor)), monitorWidget, SLOT(setCurrentSeed(QString,QColor)));
 }
 
 mainWindow::~mainWindow() {}
 
-void mainWindow::addWidgetToViewer(QPixmap p)
+void mainWindow::addWidgetToViewer( QPixmap p, bool isNewPic)
 {
+    if( isNewPic)
+        for( int i = viewer->count()-1; i >= 0; i--)
+            viewer->removeTab( i);
     if( viewer->count() > 0)
     {
         QPixmap output( p.width(), p.height());
