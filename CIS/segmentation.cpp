@@ -15,10 +15,6 @@ void CSegmentation::setInputImage( QImage image ) {
 }
 
 void CSegmentation::run() {
-    for( int index = 1; index < monitor->seedsColor.count(); index++)
-    {
-        // Save segmentation start time
-        const clock_t t_start = clock();
 
         // Take m and n image size
         const int m = inputImage->rows;
@@ -39,18 +35,29 @@ void CSegmentation::run() {
         cout << "L took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 
         begin_time = clock();
-        // Compute seeds dependent matrices (Is , b)
-        SparseMatrix<double> Is( m * n , m * n );
-        VectorXd b( m * n );
-        b = VectorXd::Zero( m * n );
-        SeedsDependentMatrices( xf , xb , Is , b , index);
-        cout << "Is and b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-
-        begin_time = clock();
         // Compute the Graph Laplacian Matrix square
         SparseMatrix<double> L2( m * n , m * n );
         L2 = GraphLaplacianMatrixSquare( L );
         cout << "L^2 took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+
+        begin_time = clock();
+        // Compute seeds dependent matrix (Is)
+        SparseMatrix<double> Is( m * n , m * n );
+        SeedsDependentMatrixIs( Is );
+        cout << "Is took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        cout << endl;
+
+    for( int index = 1 ; index < monitor->seedsColor.count() ; index++ ) {
+
+        // Save segmentation start time
+        const clock_t t_start = clock();
+
+        begin_time = clock();
+        // Compute seeds dependent vector (b)
+        VectorXd b( m * n );
+        b = VectorXd::Zero( m * n );
+        SeedsDependentVectorb( xf , xb , b , index);
+        cout << "b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 
         begin_time = clock();
         // Solve linear system
@@ -66,6 +73,7 @@ void CSegmentation::run() {
 
         // Print time tooken for segmentation process
         cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
+        cout << endl;
 
         // Show the segmented image
         q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
@@ -119,37 +127,28 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
     }
 }
 
-void CSegmentation::SeedsDependentMatrices(const int &xf , const int &xb , SparseMatrix<double> &Is , VectorXd &b , int ind) {
-    // Compute Is matrix and b vector
-    //    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
-    //        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-    //        b( it->first + it->second * monitor->image->width() ) = xf;
-    //    }
-    //    for( QSet< QPair< int, int> >::Iterator it = monitor->bgSeeds.begin(); it != monitor->bgSeeds.end(); ++it) {
-    //        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-    //        b( it->first + it->second * monitor->image->width() ) = xb;
-    //    }
+void CSegmentation::SeedsDependentMatrixIs( SparseMatrix<double> &Is ) {
+    // Compute Is matrix
+    for( QMap< QString , QSet< QPair< int , int > > >::iterator it = monitor->seedsPos.begin() ; it != monitor->seedsPos.end() ; it++ ) {
+        for( QSet< QPair< int , int> >::Iterator itt = it->begin() ; itt != it->end() ; ++itt ) {
+            Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt-> first + itt->second * monitor->image->width() ) = 1;
+        }
+        for( QSet< QPair< int , int> >::iterator itt = it->begin() ; itt != it->end() ; ++itt ) {
+            Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt->first + itt->second * monitor->image->width() ) = 1;
+        }
+    }
+}
 
-    //    for( QSet< QPair< int, int> >::Iterator it = monitor->fgSeeds.begin(); it != monitor->fgSeeds.end(); ++it) {
-    //        Is.coeffRef( it->first + it->second * monitor->image->width() , it->first + it->second * monitor->image->width() ) = 1;
-    //        b( it->first + it->second * monitor->image->width() ) = xf;
-    //    }
-
-    for( QMap< QString, QSet< QPair< int, int> > >::iterator it = monitor->seedsPos.begin(); it != monitor->seedsPos.end(); it++)
-    {
-        if( ind == it.key().right(2).toInt())
-        {
-            for( QSet< QPair< int, int> >::Iterator itt = it->begin(); itt != it->end(); ++itt)
-            {
-                Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt-> first + itt->second * monitor->image->width() ) = 1;
+void CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , VectorXd &b , int ind) {
+    // Compute b vector
+    for( QMap< QString , QSet< QPair< int , int > > >::iterator it = monitor->seedsPos.begin() ; it != monitor->seedsPos.end() ; it++ ) {
+        if( ind == it.key().right(2).toInt() ) {
+            for( QSet< QPair< int, int > >::Iterator itt = it->begin() ; itt != it->end() ; ++itt ) {
                 b( itt->first + itt->second * monitor->image->width() ) = xb;
             }
         }
-        else
-        {
-            for( QSet< QPair< int, int> >::iterator itt = it->begin(); itt != it->end(); ++itt)
-            {
-                Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt->first + itt->second * monitor->image->width() ) = 1;
+        else {
+            for( QSet< QPair< int , int > >::iterator itt = it->begin() ; itt != it->end() ; ++itt ) {
                 b( itt->first + itt->second * monitor->image->width() ) = xf;
             }
         }
