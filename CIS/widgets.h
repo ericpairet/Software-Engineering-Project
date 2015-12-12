@@ -41,7 +41,6 @@ class CToolsWidget : public QWidget
 public:
     CToolsWidget(QWidget *parent = 0);
     ~CToolsWidget();
-    QRadioButton *fgRadioButton, *bgRadioButton, *rmvRadioButton;
     QLineEdit *penSize;
     QPushButton *execBtn, *clearSeedsBtn;
     QString imagePath;
@@ -49,7 +48,6 @@ public:
 private:
     QPushButton *loadButton;
     QLabel *loadLabel;
-    QLabel *seedLabel;
     QLabel *bethaName, *bethaVal;
 private slots:
     void loadSlot();

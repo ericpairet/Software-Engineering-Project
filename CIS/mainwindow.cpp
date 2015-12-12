@@ -43,12 +43,14 @@ mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
     connect( toolsWidget , SIGNAL( imageLoaded2( QImage)) , segTool , SLOT( setInputImage( QImage ) ), Qt::BlockingQueuedConnection );
     connect( toolsWidget->execBtn , SIGNAL( clicked() ) , segTool, SLOT( run()));
     connect( toolsWidget->clearSeedsBtn , SIGNAL( clicked()) , monitorWidget , SLOT( clearAllSeeds() ) );
+    connect( toolsWidget->clearSeedsBtn , SIGNAL( clicked()) , seedsWidget, SLOT( removeSeeds()));
     connect( toolsWidget, SIGNAL( imageLoaded( QPixmap, bool)), seedsWidget, SLOT( removeSeeds()));
     connect( toolsWidget, SIGNAL( imageLoaded( QPixmap, bool)), monitorWidget, SLOT( clearAllSeeds()));
     connect( segTool , SIGNAL( sendImage( QPixmap, bool) ) , this, SLOT( addWidgetToViewer(QPixmap, bool)), Qt::BlockingQueuedConnection );
     connect( toolsWidget->bethaSlider, SIGNAL( valueChanged(int)), segTool, SLOT( setBetha(int)), Qt::BlockingQueuedConnection);
     connect( seedsWidget, SIGNAL( selectedSeedSignal(QString,QColor)), monitorWidget, SLOT(setCurrentSeed(QString,QColor)));
 }
+
 
 mainWindow::~mainWindow() {}
 

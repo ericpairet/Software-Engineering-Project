@@ -101,11 +101,6 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     setLayout( lOut);
     loadLabel = new QLabel("Load image");
     loadButton = new QPushButton("Browse");
-    seedLabel = new QLabel("Seed selection:");
-    fgRadioButton = new QRadioButton("ForeGround");
-    fgRadioButton->setChecked( true);
-    bgRadioButton = new QRadioButton("BackGroung");
-    rmvRadioButton = new QRadioButton("Remove");
     penSize = new QLineEdit("1");
     execBtn = new QPushButton("Execute");
     clearSeedsBtn = new QPushButton("Clear");
@@ -118,16 +113,12 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     bethaVal = new QLabel("0.005");
     lOut->addWidget( loadLabel, 0, 0);
     lOut->addWidget( loadButton, 0, 1);
-    lOut->addWidget( seedLabel, 1, 0);
-    lOut->addWidget( fgRadioButton, 1, 1);
-    lOut->addWidget( bgRadioButton, 2, 1);
-    lOut->addWidget( rmvRadioButton, 3, 1);
-    lOut->addWidget( penSize, 2,0);
-    lOut->addWidget( clearSeedsBtn, 3,0);
-    lOut->addWidget( execBtn, 4,0);
-    lOut->addWidget( bethaName, 5, 0);
-    lOut->addWidget( bethaVal, 5, 1);
-    lOut->addWidget( bethaSlider, 6,0, 1, 2);
+    lOut->addWidget( penSize, 1,0);
+    lOut->addWidget( clearSeedsBtn, 2,0);
+    lOut->addWidget( execBtn, 3,0);
+    lOut->addWidget( bethaName, 4, 0);
+    lOut->addWidget( bethaVal, 4, 1);
+    lOut->addWidget( bethaSlider, 5,0, 1, 2);
 
     connect( loadButton, SIGNAL(pressed()), this, SLOT(loadSlot()));
     connect( bethaSlider, SIGNAL( valueChanged(int)), this, SLOT(updateBethaValue(int)));
