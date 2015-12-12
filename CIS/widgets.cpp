@@ -11,6 +11,7 @@ CTabDockWidget::CTabDockWidget(QWidget* parent)
     layout->addWidget(tabs,0,0);
     w->setLayout(layout);
     setWidget(w);
+    setTitleBarWidget( new QWidget());
 }
 
 
