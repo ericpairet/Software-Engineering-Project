@@ -94,10 +94,17 @@ CViewerWidget::~CViewerWidget()
 
 }
 
+void CViewerWidget::resizeEvent(QResizeEvent *event)
+{
+    emit imageSizeLimitSignal( event->size());
+}
+
 //Tools Widget for handling the tools (this class is temperory, we can put everything we need here for know, then we can separate them
 CToolsWidget::CToolsWidget( QWidget *parent)
     : QWidget(parent)
 {
+//    imageLimit = QSize( 1024, 1024);
+
     QGridLayout *lOut = new QGridLayout(this);
     setLayout( lOut);
     loadLabel = new QLabel("Load image");
@@ -135,18 +142,32 @@ void CToolsWidget::loadSlot()
     QString path = QFileDialog::getOpenFileName(this, tr("Load image"), "./../Images", tr("Image files (*.jpg *.jpeg *.png)"));
     if(path != "")
     {
-        //QPixmap pic( path);
+
         QPixmap pic = path;
         QImage img = QImage(path);
+        if( img.height() > imageLimit.height())
+        {
+            img = img.scaledToHeight(imageLimit.height());
+            pic = pic.scaledToHeight(imageLimit.height());
+        }
+        if( img.width() > imageLimit.width())
+        {
+            img = img.scaledToWidth(imageLimit.width());
+            pic = pic.scaledToWidth(imageLimit.width());
+        }
         emit imageLoaded( pic, true);
         emit imageLoaded2( img);
     }
-    imagePath = path;
 }
 
 void CToolsWidget::updateBethaValue(int _val)
 {
     bethaVal->setText(QString("%1").arg(_val/10000.0));
+}
+
+void CToolsWidget::setImageSizeLimit(QSize _s)
+{
+    imageLimit = _s;
 }
 
 //seed widget:

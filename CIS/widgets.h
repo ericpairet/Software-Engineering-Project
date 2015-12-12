@@ -43,18 +43,20 @@ public:
     ~CToolsWidget();
     QLineEdit *penSize;
     QPushButton *execBtn, *clearSeedsBtn;
-    QString imagePath;
     QSlider *bethaSlider;
 private:
     QPushButton *loadButton;
     QLabel *loadLabel;
     QLabel *bethaName, *bethaVal;
+    QSize imageLimit;
 private slots:
     void loadSlot();
     void updateBethaValue(int _val);
 signals:
     void imageLoaded( QPixmap, bool);
     void imageLoaded2( QImage);
+public slots:
+    void setImageSizeLimit( QSize);
 };
 
 class CMonitorWidget : public QWidget
@@ -90,6 +92,10 @@ class CViewerWidget : public QTabWidget
 public:
     CViewerWidget( QWidget *parent = 0);
     ~CViewerWidget();
+private:
+    void resizeEvent(QResizeEvent *event);
+signals:
+    void imageSizeLimitSignal( QSize);
 };
 
 class CSeedWidget : public QWidget

@@ -49,6 +49,7 @@ mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
     connect( segTool , SIGNAL( sendImage( QPixmap, bool) ) , this, SLOT( addWidgetToViewer(QPixmap, bool)), Qt::BlockingQueuedConnection );
     connect( toolsWidget->bethaSlider, SIGNAL( valueChanged(int)), segTool, SLOT( setBetha(int)), Qt::BlockingQueuedConnection);
     connect( seedsWidget, SIGNAL( selectedSeedSignal(QString,QColor)), monitorWidget, SLOT(setCurrentSeed(QString,QColor)));
+    connect( viewer, SIGNAL( imageSizeLimitSignal(QSize)), toolsWidget, SLOT( setImageSizeLimit(QSize)));
 }
 
 
@@ -75,6 +76,7 @@ void mainWindow::addWidgetToViewer( QPixmap p, bool isNewPic)
         QLabel *l = new QLabel( w);
         l->setPixmap( *image);
         viewer->addTab( w, QString("ForeGround %1").arg(viewer->count()));
+        qDebug() << "size : " << w->height() << w->width();
     }
     else
     {
