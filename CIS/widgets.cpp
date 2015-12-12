@@ -184,10 +184,8 @@ CSeedWidget::~CSeedWidget()
 void CSeedWidget::setColor()
 {
     seedColor = QColorDialog::getColor(QColor( rand()%256, rand()%256, rand()%256));
-    QPalette p = colorSelectBtn->palette();
-    p.setColor( QPalette::Button, seedColor);
+    colorSelectBtn->setStyleSheet(QString("background-color:#%1%2%3;").arg(QString::number(seedColor.red(),16)).arg(QString::number(seedColor.green(),16)).arg(QString::number(seedColor.blue(),16)));
     colorSelectBtn->setAutoFillBackground( true);
-    colorSelectBtn->setPalette( p);
     colorSelectBtn->update();
 }
 
