@@ -183,10 +183,10 @@ CSeedWidget::CSeedWidget(QString name, QButtonGroup *gp, QWidget *parent)
     lOut->addWidget( colorSelectBtn, 0, 2);
     this->setLayout( lOut);
     gp->addButton( selected);
-
+    selected->setChecked(false);
     connect( colorSelectBtn, SIGNAL( clicked()), this, SLOT(setColor()));
-    connect( selected, SIGNAL( clicked(bool)), this, SLOT( emitSeedChanged(bool)));
-    emit colorSelectBtn->clicked(true);
+    connect( selected, SIGNAL( toggled(bool)), this, SLOT( emitSeedChanged(bool)));
+    emit colorSelectBtn->clicked();
 }
 
 CSeedWidget::~CSeedWidget()
@@ -197,9 +197,11 @@ CSeedWidget::~CSeedWidget()
 void CSeedWidget::setColor()
 {
     seedColor = QColorDialog::getColor(QColor( rand()%256, rand()%256, rand()%256));
-    colorSelectBtn->setStyleSheet(QString("background-color:#%1%2%3;").arg(QString::number(seedColor.red(),16)).arg(QString::number(seedColor.green(),16)).arg(QString::number(seedColor.blue(),16)));
+    colorSelectBtn->setStyleSheet(QString("background-color:#%1%2%3;").arg(QString::number(seedColor.red(),16), 2, QChar('0')).arg(QString::number(seedColor.green(),16), 2, QChar('0')).arg(QString::number(seedColor.blue(),16), 2, QChar('0')));
     colorSelectBtn->setAutoFillBackground( true);
     colorSelectBtn->update();
+    selected->setChecked(true);
+    emitSeedChanged(true);
 }
 
 void CSeedWidget::emitSeedChanged(bool is)
@@ -217,7 +219,6 @@ CSeedSelectionWidget::CSeedSelectionWidget(QWidget *parent)
     lOut->addWidget( addSeedBtn);
     this->setLayout( lOut);
     buttonsGroup = new QButtonGroup( this);
-
     connect( addSeedBtn, SIGNAL(clicked()), this, SLOT(addNewSeed()));
 }
 
