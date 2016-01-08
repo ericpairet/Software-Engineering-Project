@@ -12,7 +12,6 @@
 #include <QDebug>
 #include <QTimer>
 #include <QRadioButton>
-//#include <QGraphicsSceneMouseEvent>
 #include <QMouseEvent>
 #include <QLineEdit>
 #include <QImage>
@@ -22,17 +21,26 @@
 #include <QDockWidget>
 #include <QColorDialog>
 #include <QButtonGroup>
+#include <QQueue>
+#include <QTextEdit>
+#include <QTime>
+#include <QTextDocument>
 
 #include "mathtools.h"
+
+//Debugger :
+void debug(QString text, QColor color);
 
 class CTabDockWidget : public QDockWidget
 {
     Q_OBJECT
 public:
-        CTabDockWidget(QWidget* parent);
-        ~CTabDockWidget();
-        QTabWidget *tabs;
-        QWidget* w;
+    CTabDockWidget(QWidget* parent);
+    ~CTabDockWidget();
+    QTabWidget *tabs;
+    QWidget* w;
+signals:
+    void resized( QSize);
 };
 
 class CToolsWidget : public QWidget
@@ -53,8 +61,8 @@ private slots:
     void loadSlot();
     void updateBethaValue(int _val);
 signals:
-    void imageLoaded( QPixmap, bool);
-    void imageLoaded2( QImage);
+    void imageLoadedQPixmap( QPixmap, bool);
+    void imageLoadedQImage( QImage);
 public slots:
     void setImageSizeLimit( QSize);
 };
@@ -138,5 +146,52 @@ private slots:
 signals:
     void selectedSeedSignal( QString, QColor);
 };
+
+
+class CStatusText
+{
+    public:
+    CStatusText(QString _text = "", QColor _color = QColor("black"), int _size = 12)
+    {
+        text= _text;
+        color = _color;
+        size = _size;
+    }
+
+    QString text;
+    QColor color;
+    int size;
+};
+
+class CStatusPrinter
+{
+    public:
+    CStatusPrinter() {}
+    QQueue<CStatusText> textBuffer; /**< TODO */
+};
+
+class CStatusWidget : public QDockWidget
+{
+    Q_OBJECT
+public:
+    CStatusWidget(CStatusPrinter* _statusPrinter);
+    ~CStatusWidget();
+    QTextEdit *statusText;
+    QLabel *titleLbl;
+    QTextDocument content;
+public slots:
+    void write(QString str, QColor color = QColor("black"));
+    void update();
+    void getSizeFromViewer(QSize size);
+private:
+    CStatusPrinter *statusPrinter;
+    QTime logTime;
+signals:
+    void closeSignal(bool);
+protected:
+    void closeEvent(QEvent*);
+};
+
+extern CStatusPrinter *printer;
 
 #endif // WIDGETS_H

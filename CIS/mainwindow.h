@@ -25,6 +25,8 @@ private:
     QThread *segmentationThread;
     CViewerWidget *viewer;
     CSeedSelectionWidget *seedsWidget;
+    CStatusWidget *statusWidget;
+    QTimer* statusUpdateTimer;
 private slots:
     void addWidgetToViewer(QPixmap p, bool isNewPic);
 };

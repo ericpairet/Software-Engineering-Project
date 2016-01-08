@@ -1,5 +1,10 @@
 #include "widgets.h"
 
+//Debuggger :
+void debug(QString text, QColor color)
+{
+    printer->textBuffer.enqueue(CStatusText(text,color));
+}
 
 CTabDockWidget::CTabDockWidget(QWidget* parent)
     : QDockWidget(parent)
@@ -155,8 +160,8 @@ void CToolsWidget::loadSlot()
             img = img.scaledToWidth(imageLimit.width());
             pic = pic.scaledToWidth(imageLimit.width());
         }
-        emit imageLoaded( pic, true);
-        emit imageLoaded2( img);
+        emit imageLoadedQPixmap( pic, true);
+        emit imageLoadedQImage( img);
     }
 }
 
@@ -251,4 +256,61 @@ void CSeedSelectionWidget::removeSeeds()
     }
     seeds.clear();
     update();
+}
+
+//Status widget
+
+CStatusPrinter *printer;
+
+CStatusWidget::CStatusWidget(CStatusPrinter* _statusPrinter)
+{
+    statusPrinter = _statusPrinter;
+    logTime.start();
+    this->setAllowedAreas(Qt::BottomDockWidgetArea);
+    this->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    statusText = new QTextEdit(this);
+    titleLbl = new QLabel(tr("Messages"));
+    QWidget* w = new QWidget(this);
+    QGridLayout* layout = new QGridLayout(w);
+    layout->addWidget(statusText, 0, 0);
+    layout->setAlignment(statusText, Qt::AlignLeft);
+    layout->setColumnMinimumWidth(0, 500);
+    w->setLayout(layout);
+    statusText->setReadOnly(true);
+    this->setWidget(w);
+}
+
+CStatusWidget::~CStatusWidget()
+{
+    delete statusText;
+    delete titleLbl;
+}
+
+void CStatusWidget::write(QString str, QColor color)
+{
+    if( statusText->textCursor().blockNumber() > 1000 )
+        statusText->clear();
+    statusText->setTextColor(color);
+    statusText->append(QString::number(logTime.elapsed()) + " : " + str);
+    statusText->setTextColor(QColor("black"));
+}
+
+void CStatusWidget::update()
+{
+    CStatusText text;
+    while(!statusPrinter->textBuffer.isEmpty())
+    {
+        text = statusPrinter->textBuffer.dequeue();
+        write(text.text, text.color);
+    }
+}
+
+void CStatusWidget::closeEvent(QEvent*)
+{
+    emit closeSignal(false);
+}
+
+void CStatusWidget::getSizeFromViewer( QSize size)
+{
+    statusText->resize( size.width()+270, 200);
 }
