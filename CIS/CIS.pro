@@ -39,24 +39,11 @@ unix:!macx: {
 INCLUDEPATH += /usr/include \
             /usr/include/eigen3
 LIBS += -L/usr/lib/ \
-    #-lopencv_shape \
-    -lopencv_stitching \
-    -lopencv_objdetect \
-    -lopencv_superres \
-    -lopencv_videostab \
-    -lopencv_calib3d \
-    -lopencv_features2d \
-    -lopencv_highgui \
-    #-lopencv_videoio \
-    #-lopencv_imgcodecs \
-    -lopencv_video \
-    -lopencv_photo \
-    -lopencv_ml \
     -lopencv_imgproc \
-    -lopencv_flann \
-    -lopencv_core \
-    #-lopencv_hal
-
+    -lopencv_core
+LIBS += -L/usr/local/lib/ \
+    -lgtest \
+    -lgtest_main
 }
 
 macx {
@@ -85,10 +72,11 @@ LIBS += -L/usr/local/lib/ \
 SOURCES += main.cpp \
     mainwindow.cpp \
     widgets.cpp \
-    segmentation.cpp
+    segmentation.cpp \
 
 HEADERS += \
     mathtools.h \
     mainwindow.h \
     widgets.h \
-    segmentation.h
+    segmentation.h \
+    test.h

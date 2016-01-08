@@ -16,6 +16,8 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
 
+#include <gtest/gtest.h>
+
 using namespace std;
 using namespace Eigen;
 using namespace cv;
@@ -61,6 +63,7 @@ public slots:
     void setBetha( int _val);
 
 private:
+    FRIEND_TEST( segmentationTest, sytemSolverTester);
     CToolsWidget *tools; /**< TODO */
     CMonitorWidget *monitor; /**< TODO */
     cv::Mat *inputImage; /**< TODO */
@@ -102,9 +105,9 @@ private:
      *
      * @param Is_L
      * @param b
-     * @param X
+     * @return VectorXd
      */
-    void ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b , VectorXd &X );
+    static VectorXd* ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b);
     /**
      * @brief
      *

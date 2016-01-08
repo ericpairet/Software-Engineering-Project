@@ -6,6 +6,7 @@ CSegmentation::CSegmentation( CToolsWidget *_t , CMonitorWidget *_m ) : QObject(
     betta = 0.005;
 }
 
+
 CSegmentation::~CSegmentation() {}
 
 void CSegmentation::setInputImage( QImage image ) {
@@ -70,7 +71,7 @@ void CSegmentation::run() {
         begin_time = clock();
         // Solve linear system
         VectorXd X( m * n );
-        ComputeLinearSystem( Is + L2 , b , X );
+        X = *ComputeLinearSystem( Is + L2 , b );
 //        cout << "Ax = b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'Ax = b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
@@ -167,9 +168,10 @@ void CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , Vector
     }
 }
 
-void CSegmentation::ComputeLinearSystem( const SparseMatrix<double> &Is_L2 , const VectorXd &b , VectorXd &X ) {
+VectorXd* CSegmentation::ComputeLinearSystem( const SparseMatrix<double> &Is_L2 , const VectorXd &b) {
     SimplicialCholesky< SparseMatrix<double> > chol( Is_L2 );
-    X = chol.solve( b );
+    VectorXd X = chol.solve( b );
+    return &X;
 }
 
 void CSegmentation::AssignLabels( const int &m , const int &n , const double &xf , const double &xb , const VectorXd &X , Mat_<float> &Y ) {
