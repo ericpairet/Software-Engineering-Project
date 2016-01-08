@@ -20,32 +20,110 @@ using namespace std;
 using namespace Eigen;
 using namespace cv;
 
+/**
+ * @brief
+ *
+ */
 class CSegmentation : public QObject {
     Q_OBJECT
 
 public:
+    /**
+     * @brief
+     *
+     * @param _t
+     * @param _m
+     */
     CSegmentation( CToolsWidget *_t , CMonitorWidget *_m );
+    /**
+     * @brief
+     *
+     */
     ~CSegmentation();
 
 public slots:
+    /**
+     * @brief
+     *
+     * @param image
+     */
     void setInputImage( QImage image );
+    /**
+     * @brief
+     *
+     */
     void run();
+    /**
+     * @brief
+     *
+     * @param _val
+     */
     void setBetha( int _val);
 
 private:
-    CToolsWidget *tools;
-    CMonitorWidget *monitor;
-    cv::Mat *inputImage;
-    QPixmap q;
-    double betta;
+    CToolsWidget *tools; /**< TODO */
+    CMonitorWidget *monitor; /**< TODO */
+    cv::Mat *inputImage; /**< TODO */
+    QPixmap q; /**< TODO */
+    double betta; /**< TODO */
+    /**
+     * @brief
+     *
+     * @param I
+     * @param betta
+     * @param sigma
+     * @param L
+     */
     void GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L );
+    /**
+     * @brief
+     *
+     * @param Is
+     */
     void SeedsDependentMatrixIs( SparseMatrix<double> &Is );
+    /**
+     * @brief
+     *
+     * @param xf
+     * @param xb
+     * @param b
+     * @param seed
+     */
     void SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, QString seed);
+    /**
+     * @brief
+     *
+     * @param L
+     * @return SparseMatrix<double>
+     */
     inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L ); }
+    /**
+     * @brief
+     *
+     * @param Is_L
+     * @param b
+     * @param X
+     */
     void ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b , VectorXd &X );
+    /**
+     * @brief
+     *
+     * @param m
+     * @param n
+     * @param xf
+     * @param xb
+     * @param X
+     * @param Y
+     */
     void AssignLabels( const int &m , const int &n , const double &xf , const double &xb , const VectorXd &X , Mat_<float> &Y );
 
 signals:
+    /**
+     * @brief
+     *
+     * @param QPixmap
+     * @param bool
+     */
     void sendImage( QPixmap, bool);
 };
 
