@@ -3,7 +3,6 @@
 mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
 
     // Main window format
-   // this->setWindowTitle( tr( "Segmentation" ) );
     this->setWindowState( Qt::WindowMaximized );
 
     // Workspace
@@ -87,7 +86,6 @@ void mainWindow::addWidgetToViewer( QPixmap p, bool isNewPic)
         QLabel *l = new QLabel( w);
         l->setPixmap( *image);
         viewer->addTab( w, QString("ForeGround %1").arg(viewer->count()));
-        qDebug() << "size : " << w->height() << w->width();
     }
     else
     {

@@ -32,23 +32,30 @@ void CSegmentation::run() {
         SparseMatrix<double> L( m * n , m * n );
         L.reserve( VectorXi::Constant( m * n , 9 ) );
         GraphLaplacianMatrix( *inputImage , betta , sigma , L );
-        cout << "L took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+//        cout << "L took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        debug( QString("Calculating 'L' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
 
         begin_time = clock();
         // Compute the Graph Laplacian Matrix square
         SparseMatrix<double> L2( m * n , m * n );
         L2 = GraphLaplacianMatrixSquare( L );
-        cout << "L^2 took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+//        cout << "L^2 took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        debug( QString("Calculating 'L*L' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
 
         begin_time = clock();
         // Compute seeds dependent matrix (Is)
         SparseMatrix<double> Is( m * n , m * n );
         SeedsDependentMatrixIs( Is );
-        cout << "Is took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-        cout << endl;
+        debug( QString("Calculating 'Is' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
+//        cout << "Is took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+//        cout << endl;
 
-    for( int index = 1 ; index < monitor->seedsColor.count() ; index++ ) {
+    for( QMap< QString, QColor>::iterator it = monitor->seedsColor.begin() ; it != monitor->seedsColor.end() ; ++it ){
+        if( it.key() == "BackGround")
+                continue;
+//    for( int index = 1 ; index < monitor->seedsColor.count() ; index++ ) {
 
+        debug("Segmentation Started for " + it.key(), it.value());
         // Save segmentation start time
         const clock_t t_start = clock();
 
@@ -56,28 +63,33 @@ void CSegmentation::run() {
         // Compute seeds dependent vector (b)
         VectorXd b( m * n );
         b = VectorXd::Zero( m * n );
-        SeedsDependentVectorb( xf , xb , b , index);
-        cout << "b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        SeedsDependentVectorb( xf , xb , b , it.key());
+//        cout << "b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        debug( QString("Calculating 'b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         begin_time = clock();
         // Solve linear system
         VectorXd X( m * n );
         ComputeLinearSystem( Is + L2 , b , X );
-        cout << "Ax = b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+//        cout << "Ax = b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        debug( QString("Calculating 'Ax = b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         begin_time = clock();
         // Assign labels to x
         Mat_<float> Y = Mat_<float>::zeros( m , n );
         AssignLabels( m , n , xf , xb , X , Y );
-        cout << "Y took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+//        cout << "Y took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+        debug( QString("Calculating 'Y' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         // Print time tooken for segmentation process
-        cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
-        cout << endl;
+//        cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
+        debug( QString("Segmentation process for %1 took : %2 seconds").arg(it.key()).arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
+//        cout << endl;
 
         // Show the segmented image
         q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
         emit sendImage(q, false);
+        debug( QString("%1 Segmented successfully !").arg(it.key()), it.value());
     }
 }
 
@@ -139,10 +151,10 @@ void CSegmentation::SeedsDependentMatrixIs( SparseMatrix<double> &Is ) {
     }
 }
 
-void CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , VectorXd &b , int ind) {
+void CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , VectorXd &b , QString seed) {
     // Compute b vector
     for( QMap< QString , QSet< QPair< int , int > > >::iterator it = monitor->seedsPos.begin() ; it != monitor->seedsPos.end() ; it++ ) {
-        if( ind == it.key().right(2).toInt() ) {
+        if( seed == it.key()) {
             for( QSet< QPair< int, int > >::Iterator itt = it->begin() ; itt != it->end() ; ++itt ) {
                 b( itt->first + itt->second * monitor->image->width() ) = xb;
             }

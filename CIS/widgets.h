@@ -29,7 +29,7 @@
 #include "mathtools.h"
 
 //Debugger :
-void debug(QString text, QColor color);
+void debug(QString text, QColor color = "black");
 
 class CTabDockWidget : public QDockWidget
 {

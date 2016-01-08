@@ -40,7 +40,7 @@ private:
     double betta;
     void GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L );
     void SeedsDependentMatrixIs( SparseMatrix<double> &Is );
-    void SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, int ind);
+    void SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, QString seed);
     inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L ); }
     void ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b , VectorXd &X );
     void AssignLabels( const int &m , const int &n , const double &xf , const double &xb , const VectorXd &X , Mat_<float> &Y );

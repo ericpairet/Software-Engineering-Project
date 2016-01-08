@@ -69,7 +69,7 @@ void CMonitorWidget::mouseMoveEvent(QMouseEvent *event)
 {
     int screenPosX = event->pos().x();
     int screenPosY = event->pos().y();
-    qDebug() << screenPosX << screenPosY;
+    debug( QString("Point [%1,%2] added to the seeds").arg(screenPosX).arg(screenPosY), seedColor);
     int size = tools->penSize->text().toInt();
     if( image->rect().contains( screenPosX, screenPosY) && seedName != "")
     {
@@ -205,8 +205,8 @@ void CSeedWidget::setColor()
     colorSelectBtn->setStyleSheet(QString("background-color:#%1%2%3;").arg(QString::number(seedColor.red(),16), 2, QChar('0')).arg(QString::number(seedColor.green(),16), 2, QChar('0')).arg(QString::number(seedColor.blue(),16), 2, QChar('0')));
     colorSelectBtn->setAutoFillBackground( true);
     colorSelectBtn->update();
-    selected->setChecked(true);
-    emitSeedChanged(true);
+    selected->setChecked(false);
+//    emitSeedChanged(true);
 }
 
 void CSeedWidget::emitSeedChanged(bool is)
@@ -259,7 +259,6 @@ void CSeedSelectionWidget::removeSeeds()
 }
 
 //Status widget
-
 CStatusPrinter *printer;
 
 CStatusWidget::CStatusWidget(CStatusPrinter* _statusPrinter)
