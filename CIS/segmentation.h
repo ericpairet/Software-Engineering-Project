@@ -58,9 +58,16 @@ public:
 };
 
 /**
- * @brief Class in charge of the mathematical procedures to follow
+ * @brief CSegmentation : Class in charge of the mathematical procedures to follow
  * the implementation of the Laplacian Coordinates segmentation
- * paper.
+ * paper. The class is divided into functions that calculate the different parameters
+ * needed to follow the equations for seeded segmentation. For example:
+ * GraphLaplacianMatrix : to calculate L;
+ * SeedsDependentMatrixIs : to calculate Is;
+ * SeedsDependentVectorb : to calculate vector b;
+ * SparseMatrix : to calculate L^2;
+ * ComputeLinearSystem : to calculate Is +L^2 using Simplicial Cholesky;
+ *
  *
  */
 class CSegmentation : public QObject {
@@ -89,14 +96,20 @@ public slots:
      */
     void setInputImage( QImage image );
     /**
-     * @brief run(): Where the magic happens
+     * @brief run(): Where the magic happens. It uses the functions containing the
+     * calculations of the different parameters for the neighborhood average preserving
+     * energy and minimizing energy funtional equations to get the final Y image.Y image
+     * is the resulting segmented region selected by the foreground seeds. This function
+     * emits the signal sendImage so that it can be updated in the GUI.
+     * Note: go to widgets.h to see the functionality of updating the images in the GUI.
      *
      */
     void run();
     /**
      * @brief setBetha : function in charge of converting the parameter
-     * obtained by the slider (input of the user) in a valuable usable
-     * for the segmentation code
+     * obtained by the slider (input of the user) into a useful value
+     * for the segmentation code. In case the user does not select this value
+     * the default beta is set to 0.005.
      *
      * @param _val : slider value (GUI user input)
      */
@@ -112,7 +125,7 @@ private:
     double betta; /**< TODO */
     /**
      * @brief GraphLaplacianMatrix : Function to store the graph Laplacian
-     * matrix and the Diagonal matrix
+     * matrix L and the Diagonal matrix dii.
      *
      * @param I : input image matrix
      * @param betta : variable betta, tunning constant set by the user
@@ -123,14 +136,14 @@ private:
     size_t GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma, SparseMatrix<double> &L, bool testing = false);
     /**
      * @brief SeedsDependentMatrixIs : function to calculate Is
-     * diagonal matrix (for minimizing the energy functional)
+     * diagonal matrix (for minimizing the energy functional).
      *
      * @param Is : Is diagonal matrix, Is(i,i)=1
      */
     size_t SeedsDependentMatrixIs( SparseMatrix<double> &Is , bool testing = false);
     /**
      * @brief SeedsDependentVectorb : function to calculate vector b
-     * (for minimizing the energy functional)
+     * (for minimizing the energy functional).
      *
      * @param xf :foreground pixels label after segmentation
      * @param xb : background pixels label after segmentation
@@ -140,15 +153,16 @@ private:
     size_t SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, QString seed, bool testing = false);
     /**
      * @brief SparseMatrix : inline function to improve execution time on the calculation
-     * of the graph Laplacian Matrix square (L^2)
+     * of the graph Laplacian Matrix square (L^2).
      *
      * @param L : graph laplacian matrix
      * @return SparseMatrix<double> : square laplacian matrix
      */
     inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L ); }
     /**
-     * @brief ComputeLinearSystem : function calculating Is + L^2
-     * which should be symetric and positive
+     * @brief ComputeLinearSystem : static vector function calculating Is + L^2
+     * which should be symetric and positive. It useds the method of Simplicial Cholesky for
+     * the calculation.
      *
      * @param Is_L : linear system Is + Ls^2
      * @param b : vector b
@@ -158,7 +172,7 @@ private:
     /**
      * @brief AssignLabels : function that helps labeling the pixels
      * for background or foreground labels. It shapes from vector to
-     * matrix and changes from eigen to opencv
+     * matrix and changes from eigen to opencv.
      *
      * @param m : m rows of matrix
      * @param n : n columns of matrix
@@ -171,8 +185,8 @@ private:
 
 signals:
     /**
-     * @brief sendImage : signal that sends the output segmented to the
-     * GUI
+     * @brief sendImage : signal that sends the segmented region (output Y of run())
+     * to be shown in the GUI.
      *
      * @param QPixmap : q containing the QPixmap of the image
      * @param bool : either true or false
