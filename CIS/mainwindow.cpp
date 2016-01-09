@@ -98,6 +98,9 @@ void mainWindow::addWidgetToViewer( QPixmap p, bool isNewPic)
 
 void mainWindow::gTest()
 {
-    debug("Testing starts...", "cayn");
-    debug( QString("Test Result : %1").arg( RUN_ALL_TESTS()), "red");
+    debug("Testing starts...", "cyan");
+    if( RUN_ALL_TESTS() == 0)
+        debug("Test was all successfull !!!", "green");
+    else
+        debug("Test failed for some test cases!!!", "red");
 }

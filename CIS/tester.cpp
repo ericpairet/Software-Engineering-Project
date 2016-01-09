@@ -23,10 +23,11 @@ void CSegmenterGTester::SetUp() {
     testMon = new CMonitorWidget( testPxm, testSeedsColors, testSeedsPos);
     segTool = new CSegmentation( testMon);
     segTool->setInputImage( *testImg);
-//    segTool->run();
 }
 
 void CSegmenterGTester::TearDown() {
+    delete testPxm;
+    delete testImg;
     delete segTool;
     delete testMon;
     delete inputImage;
@@ -36,20 +37,61 @@ TEST_F(CSegmenterGTester, graphLapMat) {
     double betha = 0.005;
     double sigma = 0.1;
     SparseMatrix<double> outPut( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
-    loadMarket(outPut, "graphOutput.gtd");
+    loadMarket(outPut, "../gTestData/graphOutput.gtd");
     sparseHash<SparseMatrix<double> > hashGenerator;
     SparseMatrix<double> dummy( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
     EXPECT_EQ( hashGenerator(outPut), segTool->GraphLaplacianMatrix( *inputImage, betha, sigma, dummy, true));
 }
 
-//TEST_F(CSegmenterGTester, seedDepVec) {
-//    int Xf = 0;
-//    int Xb = 1;
-//    VectorXd outPut( inputImage->rows *inputImage->cols);
-//    ifstream ifs("vecBOutput.gtd", ios::binary);
-//    ifs.read((char *)&outPut, sizeof( outPut));
-//    cout << "saved : \n\n" << outPut << "\n\n\n";
-//    vectorHash<VectorXd> hashGenerator;
-//    VectorXd dummy( inputImage->rows *inputImage->cols);
-//    EXPECT_EQ( hashGenerator( outPut), segTool->SeedsDependentVectorb( Xf, Xb, dummy, "Foreground", true));
-//}
+TEST_F(CSegmenterGTester, seedDepMat) {
+    SparseMatrix<double> out( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
+    loadMarket(out, "../gTestData/matISOutput.gtd");
+    sparseHash<SparseMatrix<double> > hashGenerator;
+    SparseMatrix<double> dummy( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
+    EXPECT_EQ( hashGenerator(out), segTool->SeedsDependentMatrixIs( dummy, true));
+}
+
+TEST_F(CSegmenterGTester, seedDepVec) {
+    double Xf = 0.0;
+    double Xb = 1.0;
+    VectorXd outPut( inputImage->rows *inputImage->cols);
+    ifstream ifs("../gTestData/vecBOutput.gtd", ios::binary);
+    string s;
+    int ind = 0;
+    while( ifs >> s)
+        outPut( ind++) = stod( s);
+    vectorHash<VectorXd> hashGenerator;
+    VectorXd dummy( inputImage->rows *inputImage->cols);
+    dummy = VectorXd::Zero( inputImage->rows *inputImage->cols);
+    EXPECT_EQ( hashGenerator( outPut), segTool->SeedsDependentVectorb( Xf, Xb, dummy, "Foreground", true));
+}
+
+TEST_F(CSegmenterGTester, l2Mat) {
+    SparseMatrix<double> outPut( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
+    SparseMatrix<double> inPut( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
+    loadMarket(outPut, "../gTestData/l2Output.gtd");
+    loadMarket(inPut, "../gTestData/l2Input.gtd");
+    sparseHash<SparseMatrix<double> > hashGenerator;
+    SparseMatrix<double> dummy( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
+    EXPECT_EQ( hashGenerator( outPut), segTool->GraphLaplacianMatrixSquare( inPut, dummy, true));
+}
+
+TEST_F(CSegmenterGTester, systemSolver) {
+    VectorXd outPut( inputImage->rows *inputImage->cols);
+    ifstream ifs("../gTestData/systemSolverOutput.gtd", ios::binary);
+    string s;
+    int ind = 0;
+    while( ifs >> s)
+        outPut( ind++) = stod( s);
+    SparseMatrix<double> l2Is( inputImage->rows *inputImage->cols, inputImage->rows *inputImage->cols);
+    loadMarket(l2Is, "../gTestData/l2+Is.gtd");
+    VectorXd inPut( inputImage->rows *inputImage->cols);
+    ifstream ifss("../gTestData/systemSolverInput.gtd", ios::binary);
+    ind = 0;
+    while( ifss >> s)
+        inPut( ind++) = stod( s);
+    vectorHash<VectorXd> hashGenerator;
+    VectorXd dummy( inputImage->rows *inputImage->cols);
+    dummy = VectorXd::Zero( inputImage->rows *inputImage->cols);
+    EXPECT_EQ( hashGenerator( outPut), segTool->ComputeLinearSystem( l2Is, inPut, dummy, true));
+}

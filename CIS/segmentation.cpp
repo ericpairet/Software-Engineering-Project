@@ -21,8 +21,8 @@ void CSegmentation::run() {
         const int n = inputImage->cols;
 
         // Initialize background and foreground labels
-        const double xb = 1;
-        const double xf = 0;
+        const double xb = 1.0;
+        const double xf = 0.0;
 
         // Initialize tunning constants
         double sigma = 0.1;
@@ -38,7 +38,7 @@ void CSegmentation::run() {
         begin_time = clock();
         // Compute the Graph Laplacian Matrix square
         SparseMatrix<double> L2( m * n , m * n );
-        L2 = GraphLaplacianMatrixSquare( L );
+        GraphLaplacianMatrixSquare( L, L2);
 //        cout << "L^2 took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'L*L' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
 
@@ -161,13 +161,25 @@ size_t CSegmentation::SeedsDependentMatrixIs(SparseMatrix<double> &Is , bool tes
     if( testing)
     {
         sparseHash<SparseMatrix<double> > hashGenerator;
-        cout << hashGenerator( Is);
         return hashGenerator( Is);
     }
     return 0;
 }
 
-size_t CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , VectorXd &b , QString seed, bool testing) {
+size_t CSegmentation::GraphLaplacianMatrixSquare(const SparseMatrix<double> &L, SparseMatrix<double> &L2, bool testing)
+{
+//    saveMarket(L, "l2Intput.gtd");
+    L2 =  L * L;
+//    saveMarket(L2, "l2Output.gtd");
+    if( testing)
+    {
+        sparseHash<SparseMatrix<double> > hashGenerator;
+        return hashGenerator( L2);
+    }
+    return 0;
+}
+
+size_t CSegmentation::SeedsDependentVectorb(const double &xf , const double &xb , VectorXd &b , QString seed, bool testing) {
     // Compute b vector
     for( QMap< QString , QSet< QPair< int , int > > >::iterator it = monitor->seedsPos.begin() ; it != monitor->seedsPos.end() ; it++ ) {
         if( seed == it.key()) {
@@ -185,8 +197,10 @@ size_t CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , Vect
 //        cout << "calced : \n\n" << b << "\n\n\n";
 //    {
 //        ofstream ofs("vecBOutput.gtd", ios::binary);
-//        ofs << b;
+//        ofs << b.cast <int>();
 //    }
+//    VectorXf bb = b.cast <float>();
+//    cout << "\n\n\n" << b.cast <int>() << "\n\n\n";
     if( testing)
     {
         vectorHash<VectorXd> hashGenerator;

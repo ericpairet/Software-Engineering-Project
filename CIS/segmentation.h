@@ -117,7 +117,10 @@ public slots:
 
 private:
     FRIEND_TEST( CSegmenterGTester, graphLapMat);
+    FRIEND_TEST( CSegmenterGTester, seedDepMat);
     FRIEND_TEST( CSegmenterGTester, seedDepVec);
+    FRIEND_TEST( CSegmenterGTester, l2Mat);
+    FRIEND_TEST( CSegmenterGTester, systemSolver);
     CToolsWidget *tools; /**< TODO */
     CMonitorWidget *monitor; /**< TODO */
     cv::Mat *inputImage; /**< TODO */
@@ -150,7 +153,7 @@ private:
      * @param b : vector b, b(i) = xb if x belongs to B or b(i) = xf f x belongs to F
      * @param seed : seeds input by the user
      */
-    size_t SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, QString seed, bool testing = false);
+    size_t SeedsDependentVectorb(const double &xf , const double &xb , VectorXd &b, QString seed, bool testing = false);
     /**
      * @brief SparseMatrix : inline function to improve execution time on the calculation
      * of the graph Laplacian Matrix square (L^2).
@@ -158,7 +161,7 @@ private:
      * @param L : graph laplacian matrix
      * @return SparseMatrix<double> : square laplacian matrix
      */
-    inline SparseMatrix<double> GraphLaplacianMatrixSquare( SparseMatrix<double> &L ) { return ( L * L ); }
+     size_t GraphLaplacianMatrixSquare( const SparseMatrix<double> &L, SparseMatrix<double> &L2, bool testing = false);
     /**
      * @brief ComputeLinearSystem : static vector function calculating Is + L^2
      * which should be symetric and positive. It useds the method of Simplicial Cholesky for
