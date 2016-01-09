@@ -129,7 +129,7 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     bethaSlider->setValue(50);
     bethaSlider->setOrientation(Qt::Horizontal);
     bethaSlider->setTickInterval(1);
-    bethaName = new QLabel("Betha :");
+    bethaName = new QLabel("Beta :");
     bethaVal = new QLabel("0.005");
     lOut->addWidget( loadLabel, 0, 0);
     lOut->addWidget( loadButton, 0, 1);
