@@ -11,6 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = CIS
 TEMPLATE = app
 
+CONFIG += c++11
+
 win32:{
 INCLUDEPATH += "C:\Program Files (x86)\Eigen\include\eigen3" \
             "C:\opencv\opencv\sources\build\install\include" \
@@ -73,10 +75,11 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     widgets.cpp \
     segmentation.cpp \
+    tester.cpp
 
 HEADERS += \
     mathtools.h \
     mainwindow.h \
     widgets.h \
     segmentation.h \
-    test.h
+    tester.h

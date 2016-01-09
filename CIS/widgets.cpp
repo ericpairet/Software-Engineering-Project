@@ -41,6 +41,13 @@ CMonitorWidget::CMonitorWidget(CToolsWidget *_tools, QWidget *parent)
     connect(mainTimer,SIGNAL(timeout()),this,SLOT(repaint()));
 }
 
+CMonitorWidget::CMonitorWidget(QPixmap *_im, QMap<QString, QColor> _sColors, QMap<QString, QSet<QPair<int, int> > > _sPos, QWidget *parent)
+{
+    image = _im;
+    seedsColor = _sColors;
+    seedsPos = _sPos;
+}
+
 CMonitorWidget::~CMonitorWidget()
 {
 

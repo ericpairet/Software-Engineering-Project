@@ -11,16 +11,51 @@
 #include <Eigen/Sparse>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
+#include <unsupported/Eigen/SparseExtra>
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
 
 #include <gtest/gtest.h>
+#include <fstream>
 
 using namespace std;
 using namespace Eigen;
 using namespace cv;
+
+template<class TT> class sparseHash;
+
+template<>
+class sparseHash<Eigen::SparseMatrix<double> > {
+public:
+    size_t operator()(const SparseMatrix<double> &m) const
+    {
+        stringstream ss;
+        for (int k=0; k<m.outerSize(); ++k)
+            for (SparseMatrix<double>::InnerIterator it(m,k); it; ++it)
+            {
+                ss << it.value() << it.row() << it.col() << it.index() << endl;
+            }
+        string s = ss.str();
+        return std::hash<std::string>()(s);
+    }
+};
+
+
+template<class T> class vectorHash;
+
+template<>
+class vectorHash<VectorXd> {
+public:
+    size_t operator()(const VectorXd &v) const
+    {
+        stringstream ss;
+        ss << v;
+        string s = ss.str();
+        return std::hash<std::string>()(s);
+    }
+};
 
 /**
  * @brief Class in charge of the mathematical procedures to follow
@@ -36,10 +71,9 @@ public:
      * @brief CSegmentation : function in charge of pulling variables
      * to the monitor so that they can be handled by the user
      *
-     * @param _t : handles the tools for the tunning variables
      * @param _m : handles the monitor to pull data into the GUI
      */
-    CSegmentation( CToolsWidget *_t , CMonitorWidget *_m );
+    CSegmentation(CMonitorWidget *_m );
     /**
      * @brief Destructor member function for CSegmentation
      *
@@ -69,7 +103,8 @@ public slots:
     void setBetha( int _val);
 
 private:
-    FRIEND_TEST( segmentationTest, sytemSolverTester);
+    FRIEND_TEST( CSegmenterGTester, graphLapMat);
+    FRIEND_TEST( CSegmenterGTester, seedDepVec);
     CToolsWidget *tools; /**< TODO */
     CMonitorWidget *monitor; /**< TODO */
     cv::Mat *inputImage; /**< TODO */
@@ -84,14 +119,15 @@ private:
      * @param sigma : variable sigma, set it to 0.1 (paper suggestion)
      * @param L : graph laplacian matrix
      */
-    void GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L );
+    //    static SparseMatrix<double>* GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma);
+    size_t GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma, SparseMatrix<double> &L, bool testing = false);
     /**
      * @brief SeedsDependentMatrixIs : function to calculate Is
      * diagonal matrix (for minimizing the energy functional)
      *
      * @param Is : Is diagonal matrix, Is(i,i)=1
      */
-    void SeedsDependentMatrixIs( SparseMatrix<double> &Is );
+    size_t SeedsDependentMatrixIs( SparseMatrix<double> &Is , bool testing = false);
     /**
      * @brief SeedsDependentVectorb : function to calculate vector b
      * (for minimizing the energy functional)
@@ -101,7 +137,7 @@ private:
      * @param b : vector b, b(i) = xb if x belongs to B or b(i) = xf f x belongs to F
      * @param seed : seeds input by the user
      */
-    void SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, QString seed);
+    size_t SeedsDependentVectorb( const int &xf , const int &xb , VectorXd &b, QString seed, bool testing = false);
     /**
      * @brief SparseMatrix : inline function to improve execution time on the calculation
      * of the graph Laplacian Matrix square (L^2)
@@ -118,7 +154,7 @@ private:
      * @param b : vector b
      * @return X : solution vector x
      */
-    static VectorXd* ComputeLinearSystem( const SparseMatrix<double> &Is_L , const VectorXd &b);
+    size_t ComputeLinearSystem(const SparseMatrix<double> &Is_L , const VectorXd &b, VectorXd &X, bool testing = false);
     /**
      * @brief AssignLabels : function that helps labeling the pixels
      * for background or foreground labels. It shapes from vector to

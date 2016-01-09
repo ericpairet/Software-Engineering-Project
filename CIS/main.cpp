@@ -1,15 +1,16 @@
 #include "mainwindow.h"
 #include <QApplication>
-#include "test.h"
+//#include "test.h"
+//#include "tester.h"
 
 #define Testing false
 
 int main(int argc, char *argv[]) {
-    if( Testing)
-    {
+//    if( Testing)
+//    {
         ::testing::InitGoogleTest(&argc, argv);
-        return RUN_ALL_TESTS();
-    }
+//        return RUN_ALL_TESTS();
+//    }
     QApplication a(argc, argv);
     mainWindow w;
     w.show();

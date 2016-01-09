@@ -1,7 +1,6 @@
 #include "segmentation.h"
 
-CSegmentation::CSegmentation( CToolsWidget *_t , CMonitorWidget *_m ) : QObject() {
-    tools = _t;
+CSegmentation::CSegmentation( CMonitorWidget *_m ) : QObject() {
     monitor = _m;
     betta = 0.005;
 }
@@ -32,7 +31,7 @@ void CSegmentation::run() {
         // Compute the Graph Laplacian Matrix (L)
         SparseMatrix<double> L( m * n , m * n );
         L.reserve( VectorXi::Constant( m * n , 9 ) );
-        GraphLaplacianMatrix( *inputImage , betta , sigma , L );
+        GraphLaplacianMatrix( *inputImage , betta , sigma, L);
 //        cout << "L took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'L' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
 
@@ -58,12 +57,11 @@ void CSegmentation::run() {
 
         debug("Segmentation Started for " + it.key(), it.value());
         // Save segmentation start time
-        const clock_t t_start = clock();
-
         begin_time = clock();
         // Compute seeds dependent vector (b)
         VectorXd b( m * n );
         b = VectorXd::Zero( m * n );
+        debug( QString("Xf = %1, Xb = %2").arg(xf).arg(xb), "brown");
         SeedsDependentVectorb( xf , xb , b , it.key());
 //        cout << "b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
@@ -71,7 +69,7 @@ void CSegmentation::run() {
         begin_time = clock();
         // Solve linear system
         VectorXd X( m * n );
-        X = *ComputeLinearSystem( Is + L2 , b );
+        ComputeLinearSystem( Is + L2 , b , X );
 //        cout << "Ax = b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'Ax = b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
@@ -94,7 +92,7 @@ void CSegmentation::run() {
     }
 }
 
-void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma , SparseMatrix<double> &L ) {
+size_t CSegmentation::GraphLaplacianMatrix(const Mat &I , const double &betta , const double &sigma, SparseMatrix<double> &L, bool testing) {
     // Take m and n image size
     const int m = I.rows;
     const int n = I.cols;
@@ -106,6 +104,7 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
     const Mat_<double> chG = channels[1];
     const Mat_<double> chB = channels[0];
 
+//    SparseMatrix<double> L( m * n , m * n );
     // For each row
     for ( int i = 0 ; i < m ; i++ ) {
         // For each column
@@ -138,9 +137,18 @@ void CSegmentation::GraphLaplacianMatrix( const Mat &I , const double &betta , c
             L.coeffRef( i * n + j , i * n + j ) = dii;
         }
     }
+//    ofstream ofs("graphOutput.gtd", ios::binary);
+//    ofs.write((char *)&L, sizeof(L));
+//    saveMarket(L, "graphOutput.gtd");
+    if( testing)
+    {
+        sparseHash<SparseMatrix<double> > hashGenerator;
+        return hashGenerator( L);
+    }
+    return 0;
 }
 
-void CSegmentation::SeedsDependentMatrixIs( SparseMatrix<double> &Is ) {
+size_t CSegmentation::SeedsDependentMatrixIs(SparseMatrix<double> &Is , bool testing) {
     // Compute Is matrix
     for( QMap< QString , QSet< QPair< int , int > > >::iterator it = monitor->seedsPos.begin() ; it != monitor->seedsPos.end() ; it++ ) {
         for( QSet< QPair< int , int> >::Iterator itt = it->begin() ; itt != it->end() ; ++itt ) {
@@ -150,9 +158,16 @@ void CSegmentation::SeedsDependentMatrixIs( SparseMatrix<double> &Is ) {
             Is.coeffRef( itt->first + itt->second * monitor->image->width() , itt->first + itt->second * monitor->image->width() ) = 1;
         }
     }
+    if( testing)
+    {
+        sparseHash<SparseMatrix<double> > hashGenerator;
+        cout << hashGenerator( Is);
+        return hashGenerator( Is);
+    }
+    return 0;
 }
 
-void CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , VectorXd &b , QString seed) {
+size_t CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , VectorXd &b , QString seed, bool testing) {
     // Compute b vector
     for( QMap< QString , QSet< QPair< int , int > > >::iterator it = monitor->seedsPos.begin() ; it != monitor->seedsPos.end() ; it++ ) {
         if( seed == it.key()) {
@@ -166,12 +181,30 @@ void CSegmentation::SeedsDependentVectorb(const int &xf , const int &xb , Vector
             }
         }
     }
+//    if( seed == "Foreground")
+//        cout << "calced : \n\n" << b << "\n\n\n";
+//    {
+//        ofstream ofs("vecBOutput.gtd", ios::binary);
+//        ofs << b;
+//    }
+    if( testing)
+    {
+        vectorHash<VectorXd> hashGenerator;
+        return hashGenerator( b);
+    }
+    return 0;
 }
 
-VectorXd* CSegmentation::ComputeLinearSystem( const SparseMatrix<double> &Is_L2 , const VectorXd &b) {
+size_t CSegmentation::ComputeLinearSystem(const SparseMatrix<double> &Is_L2 , const VectorXd &b, VectorXd &X, bool testing) {
     SimplicialCholesky< SparseMatrix<double> > chol( Is_L2 );
-    VectorXd X = chol.solve( b );
-    return &X;
+    X = chol.solve( b );
+    // Calculating the hash of object
+    if( testing)
+    {
+        vectorHash<VectorXd> hashGenerator;
+        return hashGenerator( X);
+    }
+    return 0;
 }
 
 void CSegmentation::AssignLabels( const int &m , const int &n , const double &xf , const double &xb , const VectorXd &X , Mat_<float> &Y ) {

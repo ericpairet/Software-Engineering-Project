@@ -5,9 +5,11 @@
 #include <QMdiArea>
 #include <QPixmap>
 #include <QThread>
+#include <QShortcut>
 
 #include "widgets.h"
 #include "segmentation.h"
+//#include "test.h"
 
 class mainWindow : public QMainWindow {
     Q_OBJECT
@@ -29,6 +31,7 @@ private:
     QTimer* statusUpdateTimer;
 private slots:
     void addWidgetToViewer(QPixmap p, bool isNewPic);
+    void gTest();
 };
 
 #endif // MAINWINDOW_H

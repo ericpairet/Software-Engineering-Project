@@ -37,7 +37,7 @@ mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
     viewer->setWindowState( Qt::WindowMaximized);
 
     // Link buttons with actions
-    segTool = new CSegmentation( toolsWidget , monitorWidget );
+    segTool = new CSegmentation( monitorWidget );
 
     segmentationThread = new QThread(this);
     segTool->moveToThread(segmentationThread);
@@ -45,6 +45,8 @@ mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
 
     statusUpdateTimer->setInterval(0.3);
     statusUpdateTimer->start();
+
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_D), this, SLOT(gTest()));
 
     connect( toolsWidget , SIGNAL( imageLoadedQPixmap( QPixmap, bool)) , monitorWidget , SLOT( updateImage( QPixmap ) ) );
     connect( toolsWidget , SIGNAL( imageLoadedQPixmap( QPixmap, bool)) , this, SLOT( addWidgetToViewer(QPixmap, bool)));
@@ -92,4 +94,10 @@ void mainWindow::addWidgetToViewer( QPixmap p, bool isNewPic)
         monitorWidget->setFixedSize( p.size());
         viewer->addTab( monitorWidget, "Original");
     }
+}
+
+void mainWindow::gTest()
+{
+    debug("Testing starts...", "cayn");
+    debug( QString("Test Result : %1").arg( RUN_ALL_TESTS()), "red");
 }

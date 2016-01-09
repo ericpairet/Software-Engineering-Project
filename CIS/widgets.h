@@ -144,6 +144,7 @@ public:
      * @param parent
      */
     explicit CMonitorWidget( CToolsWidget *_tools, QWidget *parent = 0);
+    CMonitorWidget( QPixmap *_im, QMap< QString, QColor> _sColors, QMap< QString, QSet< QPair< int, int> > > _sPos, QWidget *parent = 0);
     /**
      * @brief
      *
