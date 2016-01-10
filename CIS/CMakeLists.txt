@@ -24,6 +24,11 @@ endforeach()
 #Eigen :
 find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
+if (NOT EIGEN_INCLUDE_DIR OR
+    NOT EXISTS ${EIGEN_INCLUDE_DIR})
+  include(cmake/FindEigen.cmake               REQUIRED)
+endif (NOT EIGEN_INCLUDE_DIR OR
+       NOT EXISTS ${EIGEN_INCLUDE_DIR})
 
 #GoogleTest :
 find_package(GTest REQUIRED)
