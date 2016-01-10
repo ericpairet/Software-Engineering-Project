@@ -101,7 +101,7 @@ public:
     QSlider *bethaSlider; /**< For choosing desired Betta value between predefined range */
 private:
     QPushButton *loadButton; /**< The button that opens file dialog to choose the image */
-    QLabel *loadLabel; /**< Just a lable to show a name */
+    QLabel *loadLabel, *penLable, *seedsLbl, *segLbl; /**< Just lables for showing names */
     QLabel *bethaName, *bethaVal; /**< Labels for showing the slider name and selected Betta value */
     QSize imageLimit; /**< Stores the size of window to limit the image to this size */
 private slots:
