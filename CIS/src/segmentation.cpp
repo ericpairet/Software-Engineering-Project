@@ -74,8 +74,8 @@ void CSegmentation::run() {
         debug( QString("Segmentation process for %1 took : %2 seconds").arg(it.key()).arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         // Show the segmented image
-        q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
-        emit sendImage(q, false);
+        outputImage = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
+        emit sendImage(outputImage, false);
         debug( QString("%1 Segmented successfully !").arg(it.key()), it.value());
     }
 }

@@ -27,6 +27,14 @@ using namespace cv;
 template<class TT> class sparseHash;
 
 template<>
+/**
+ * @brief Sparce Matrix hash calculator : this template class is generated to convert
+ * openCV sparse matrices to a data structure that std hash calculator has calculate
+ * the hash of the object for that.
+ * Hashes being used for comparing two matrix together instead of comparing elementwise
+ * in Google Test unit tests.
+ *
+ */
 class sparseHash<Eigen::SparseMatrix<double> > {
 public:
     size_t operator()(const SparseMatrix<double> &m) const
@@ -44,7 +52,14 @@ public:
 
 
 template<class T> class vectorHash;
-
+/**
+ * @brief Vector hash calculator : this template class is generated to convert
+ * openCV vectors to a data structure that std hash calculator has calculate
+ * the hash of the object for that
+ * Hashes being used for comparing two vector together instead of comparing elementwise
+ * in Google Test unit tests.
+ *
+ */
 template<>
 class vectorHash<VectorXd> {
 public:
@@ -75,10 +90,10 @@ class CSegmentation : public QObject {
 
 public:
     /**
-     * @brief CSegmentation : function in charge of pulling variables
-     * to the monitor so that they can be handled by the user
+     * @brief CSegmentation : The class cunstructor
      *
-     * @param _m : handles the monitor to pull data into the GUI
+     * @param _m : a pointer of CMonitorWidget class is being passed to this class
+     * which contains the seeds and input image
      */
     CSegmentation(CMonitorWidget *_m );
     /**
@@ -89,14 +104,15 @@ public:
 
 public slots:
     /**
-     * @brief setInputImage : function in charge of getting the selected
+     * @brief setInputImage : slot in charge of getting the selected
      * image to convert it into matrix using opencv library Mat
      *
      * @param image : Input image selected by the user
      */
     void setInputImage( QImage image );
     /**
-     * @brief run(): Where the magic happens. It uses the functions containing the
+     * @brief run(): Where the magic happens. the main loop of segmentation proccess wich
+     * is being run by segmentation thread. It uses the functions containing the
      * calculations of the different parameters for the neighborhood average preserving
      * energy and minimizing energy funtional equations to get the final Y image.Y image
      * is the resulting segmented region selected by the foreground seeds. This function
@@ -106,7 +122,7 @@ public slots:
      */
     void run();
     /**
-     * @brief setBetha : function in charge of converting the parameter
+     * @brief setBetha : slot in charge of converting the parameter
      * obtained by the slider (input of the user) into a useful value
      * for the segmentation code. In case the user does not select this value
      * the default beta is set to 0.005.
@@ -116,16 +132,16 @@ public slots:
     void setBetha( int _val);
 
 private:
+    // Making friendship between Google Test and this class so that GTest will have access to this class private functions
     FRIEND_TEST( CSegmenterGTester, graphLapMat);
     FRIEND_TEST( CSegmenterGTester, seedDepMat);
     FRIEND_TEST( CSegmenterGTester, seedDepVec);
     FRIEND_TEST( CSegmenterGTester, l2Mat);
     FRIEND_TEST( CSegmenterGTester, systemSolver);
-    CToolsWidget *tools; /**< TODO */
-    CMonitorWidget *monitor; /**< TODO */
-    cv::Mat *inputImage; /**< TODO */
-    QPixmap q; /**< TODO */
-    double betta; /**< TODO */
+    CMonitorWidget *monitor; /**< Monitor widget pointer that receives a pointer to main monitor widget instance */
+    cv::Mat *inputImage; /**< Input image converted to openCV matrix */
+    QPixmap outputImage; /**< Output image converted from openCV matrix to QPixmap */
+    double betta; /**< The betta value used in segmentation */
     /**
      * @brief GraphLaplacianMatrix : Function to store the graph Laplacian
      * matrix L and the Diagonal matrix dii.
@@ -134,6 +150,7 @@ private:
      * @param betta : variable betta, tunning constant set by the user
      * @param sigma : variable sigma, set it to 0.1 (paper suggestion)
      * @param L : graph laplacian matrix
+     * @return : Hash of the result being returned in case of testing
      */
     //    static SparseMatrix<double>* GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma);
     size_t GraphLaplacianMatrix( const Mat &I , const double &betta , const double &sigma, SparseMatrix<double> &L, bool testing = false);
@@ -142,6 +159,7 @@ private:
      * diagonal matrix (for minimizing the energy functional).
      *
      * @param Is : Is diagonal matrix, Is(i,i)=1
+     * @return : Hash of the result being returned in case of testing
      */
     size_t SeedsDependentMatrixIs( SparseMatrix<double> &Is , bool testing = false);
     /**
@@ -152,6 +170,7 @@ private:
      * @param xb : background pixels label after segmentation
      * @param b : vector b, b(i) = xb if x belongs to B or b(i) = xf f x belongs to F
      * @param seed : seeds input by the user
+     * @return : Hash of the result being returned in case of testing
      */
     size_t SeedsDependentVectorb(const double &xf , const double &xb , VectorXd &b, QString seed, bool testing = false);
     /**
@@ -159,7 +178,8 @@ private:
      * of the graph Laplacian Matrix square (L^2).
      *
      * @param L : graph laplacian matrix
-     * @return SparseMatrix<double> : square laplacian matrix
+     * @param SparseMatrix<double> : square laplacian matrix
+     * @return : Hash of the result being returned in case of testing
      */
      size_t GraphLaplacianMatrixSquare( const SparseMatrix<double> &L, SparseMatrix<double> &L2, bool testing = false);
     /**
@@ -169,7 +189,8 @@ private:
      *
      * @param Is_L : linear system Is + Ls^2
      * @param b : vector b
-     * @return X : solution vector x
+     * @param X : solution vector x
+     * @return : Hash of the result being returned in case of testing
      */
     size_t ComputeLinearSystem(const SparseMatrix<double> &Is_L , const VectorXd &b, VectorXd &X, bool testing = false);
     /**

@@ -214,7 +214,6 @@ void CSeedWidget::setColor()
     colorSelectBtn->setAutoFillBackground( true);
     colorSelectBtn->update();
     selected->setChecked(false);
-//    emitSeedChanged(true);
 }
 
 void CSeedWidget::emitSeedChanged(bool is)
