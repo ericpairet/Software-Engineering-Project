@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui opengl
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,6 +12,8 @@ TARGET = CIS
 TEMPLATE = app
 
 CONFIG += c++11
+
+VPATH += $$PWD/src
 
 win32:{
 INCLUDEPATH += "C:\Program Files (x86)\Eigen\include\eigen3" \

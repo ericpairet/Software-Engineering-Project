@@ -4,7 +4,9 @@
 #include "gtest/gtest.h"
 #include "segmentation.h"
 #include "widgets.h"
+#include <cstdio>
 #include <fstream>
+#include <sstream>
 
 class CSegmenterGTester : public ::testing::Test {
 protected:
@@ -18,6 +20,7 @@ protected:
     CMonitorWidget *testMon;
     virtual void SetUp();     // gtest construction
     virtual void TearDown();  // gtest destruction
-
+    stringstream buffer;
+    streambuf* sbuf;
 };
 #endif // CGTESTER_H

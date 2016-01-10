@@ -32,14 +32,12 @@ void CSegmentation::run() {
         SparseMatrix<double> L( m * n , m * n );
         L.reserve( VectorXi::Constant( m * n , 9 ) );
         GraphLaplacianMatrix( *inputImage , betta , sigma, L);
-//        cout << "L took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'L' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
 
         begin_time = clock();
         // Compute the Graph Laplacian Matrix square
         SparseMatrix<double> L2( m * n , m * n );
         GraphLaplacianMatrixSquare( L, L2);
-//        cout << "L^2 took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'L*L' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
 
         begin_time = clock();
@@ -47,43 +45,33 @@ void CSegmentation::run() {
         SparseMatrix<double> Is( m * n , m * n );
         SeedsDependentMatrixIs( Is );
         debug( QString("Calculating 'Is' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC));
-//        cout << "Is took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-//        cout << endl;
 
     for( QMap< QString, QColor>::iterator it = monitor->seedsColor.begin() ; it != monitor->seedsColor.end() ; ++it ){
         if( it.key() == "BackGround")
                 continue;
-//    for( int index = 1 ; index < monitor->seedsColor.count() ; index++ ) {
-
         debug("Segmentation Started for " + it.key(), it.value());
         // Save segmentation start time
         begin_time = clock();
         // Compute seeds dependent vector (b)
         VectorXd b( m * n );
         b = VectorXd::Zero( m * n );
-        debug( QString("Xf = %1, Xb = %2").arg(xf).arg(xb), "brown");
         SeedsDependentVectorb( xf , xb , b , it.key());
-//        cout << "b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         begin_time = clock();
         // Solve linear system
         VectorXd X( m * n );
         ComputeLinearSystem( Is + L2 , b , X );
-//        cout << "Ax = b took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'Ax = b' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         begin_time = clock();
         // Assign labels to x
         Mat_<float> Y = Mat_<float>::zeros( m , n );
         AssignLabels( m , n , xf , xb , X , Y );
-//        cout << "Y took " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Calculating 'Y' took : %1 seconds").arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
 
         // Print time tooken for segmentation process
-//        cout << "Segmentation process took " << float( clock () - t_start ) /  CLOCKS_PER_SEC << endl;
         debug( QString("Segmentation process for %1 took : %2 seconds").arg(it.key()).arg(float( clock () - begin_time ) /  CLOCKS_PER_SEC), it.value());
-//        cout << endl;
 
         // Show the segmented image
         q = QPixmap::fromImage( QImage( ( unsigned char* ) Y.data , Y.cols , Y.rows, QImage::Format_RGB32 ) );
@@ -137,9 +125,6 @@ size_t CSegmentation::GraphLaplacianMatrix(const Mat &I , const double &betta , 
             L.coeffRef( i * n + j , i * n + j ) = dii;
         }
     }
-//    ofstream ofs("graphOutput.gtd", ios::binary);
-//    ofs.write((char *)&L, sizeof(L));
-//    saveMarket(L, "graphOutput.gtd");
     if( testing)
     {
         sparseHash<SparseMatrix<double> > hashGenerator;
@@ -168,9 +153,7 @@ size_t CSegmentation::SeedsDependentMatrixIs(SparseMatrix<double> &Is , bool tes
 
 size_t CSegmentation::GraphLaplacianMatrixSquare(const SparseMatrix<double> &L, SparseMatrix<double> &L2, bool testing)
 {
-//    saveMarket(L, "l2Intput.gtd");
     L2 =  L * L;
-//    saveMarket(L2, "l2Output.gtd");
     if( testing)
     {
         sparseHash<SparseMatrix<double> > hashGenerator;
@@ -193,14 +176,6 @@ size_t CSegmentation::SeedsDependentVectorb(const double &xf , const double &xb 
             }
         }
     }
-//    if( seed == "Foreground")
-//        cout << "calced : \n\n" << b << "\n\n\n";
-//    {
-//        ofstream ofs("vecBOutput.gtd", ios::binary);
-//        ofs << b.cast <int>();
-//    }
-//    VectorXf bb = b.cast <float>();
-//    cout << "\n\n\n" << b.cast <int>() << "\n\n\n";
     if( testing)
     {
         vectorHash<VectorXd> hashGenerator;
