@@ -65,7 +65,10 @@ mainWindow::mainWindow( QWidget *parent) : QMainWindow( parent) {
 }
 
 
-mainWindow::~mainWindow() {}
+mainWindow::~mainWindow() {
+    segmentationThread->terminate();
+    delete segTool;
+}
 
 void mainWindow::addWidgetToViewer( QPixmap p, bool isNewPic)
 {
