@@ -122,24 +122,28 @@ CToolsWidget::CToolsWidget( QWidget *parent)
     setLayout( lOut);
     loadLabel = new QLabel("Load image");
     loadButton = new QPushButton("Browse");
+    penLable = new QLabel("Pen size");
+    seedsLbl = new QLabel("Seeds");
+    segLbl = new QLabel("Segmentation");
     penSize = new QLineEdit("1");
     execBtn = new QPushButton("Execute");
     clearSeedsBtn = new QPushButton("Clear");
     bethaSlider = new QSlider(this);
     bethaSlider->setRange(0, 10000);
     bethaSlider->setValue(50);
-    bethaSlider->setOrientation(Qt::Horizontal);
+    bethaSlider->setOrientation(Qt::Vertical);
     bethaSlider->setTickInterval(1);
-    bethaName = new QLabel("Beta :");
-    bethaVal = new QLabel("0.005");
+    bethalbl = new QLabel("Beta :\t0.005");
     lOut->addWidget( loadLabel, 0, 0);
     lOut->addWidget( loadButton, 0, 1);
-    lOut->addWidget( penSize, 1,0);
-    lOut->addWidget( clearSeedsBtn, 2,0);
-    lOut->addWidget( execBtn, 3,0);
-    lOut->addWidget( bethaName, 4, 0);
-    lOut->addWidget( bethaVal, 4, 1);
-    lOut->addWidget( bethaSlider, 5,0, 1, 2);
+    lOut->addWidget( penLable, 1,0);
+    lOut->addWidget( penSize, 1,1);
+    lOut->addWidget( seedsLbl, 2,0);
+    lOut->addWidget( clearSeedsBtn, 2,1);
+    lOut->addWidget( segLbl, 3,0);
+    lOut->addWidget( execBtn, 3,1);
+    lOut->addWidget( bethaSlider, 4, 0, Qt::AlignHCenter);
+    lOut->addWidget( bethalbl, 4, 1);
 
     connect( loadButton, SIGNAL(pressed()), this, SLOT(loadSlot()));
     connect( bethaSlider, SIGNAL( valueChanged(int)), this, SLOT(updateBethaValue(int)));
@@ -170,12 +174,13 @@ void CToolsWidget::loadSlot()
         }
         emit imageLoadedQPixmap( pic, true);
         emit imageLoadedQImage( img);
+        debug(QString("%1 loaded successfully !").arg(path.toStdString().substr(path.lastIndexOf('/')+1).c_str()), "darkcyan");
     }
 }
 
 void CToolsWidget::updateBethaValue(int _val)
 {
-    bethaVal->setText(QString("%1").arg(_val/10000.0));
+    bethalbl->setText(QString("Beta :\t%1").arg(_val/10000.0));
 }
 
 void CToolsWidget::setImageSizeLimit(QSize _s)
@@ -214,7 +219,6 @@ void CSeedWidget::setColor()
     colorSelectBtn->setAutoFillBackground( true);
     colorSelectBtn->update();
     selected->setChecked(false);
-//    emitSeedChanged(true);
 }
 
 void CSeedWidget::emitSeedChanged(bool is)
